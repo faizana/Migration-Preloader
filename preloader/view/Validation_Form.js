@@ -1,4 +1,5 @@
 var download_url=''
+var download_csv_url=''
 var category='Country'
 var upload_form=Ext.create('Ext.form.Panel', {
     title: 'Preloader',
@@ -8,7 +9,7 @@ var upload_form=Ext.create('Ext.form.Panel', {
     y:300,
 
     // The form will submit an AJAX request to this URL when submitted
-    url: 'http://localhost:9090/upload_csv/',
+    url: '/upload_csv/',
 
     // Fields will be arranged vertically, stretched to full width
     layout: 'anchor',
@@ -86,7 +87,9 @@ var upload_form=Ext.create('Ext.form.Panel', {
                     success: function(form, action) {
                        csv_ref=action.result.csv_ref
                        download_url=''
+                       download_csv_url=''
                        Ext.getCmp('reportDownload').disable()
+                       Ext.getCmp('csvDownload').disable()
                        Ext.Function.defer(getStatus, 2000, this, [csv_ref]);
 
                        
@@ -121,6 +124,33 @@ Ext.DomHelper.append(document.body, {
 });
             
         }
+    },{
+        text: 'Download Converted CSV',
+        disabled: true,
+        id:'csvDownload',
+        handler: function(){
+            try {
+                if (download_csv_url!=false)
+        Ext.destroy(Ext.get('downloadcsvIframe'));
+                else{
+                    alert('The required column does not exist in source csv')
+                }
+}
+            catch(e) {
+  // who you gonna call?  
+}
+      
+Ext.DomHelper.append(document.body, {
+  tag: 'iframe',
+  id:'downloadcsvIframe',
+  frameBorder: 0,
+  width: 0,
+  height: 0,
+  css: 'display:none;visibility:hidden;height: 0px;',
+  src: download_csv_url
+});
+            
+        }
     }],
     //renderTo: Ext.getBody()
 });
@@ -128,7 +158,7 @@ Ext.DomHelper.append(document.body, {
 
 getStatus=function(csv_ref){
 Ext.Ajax.request({
-    url: 'http://localhost:9090/get_mapping_status/',
+    url: '/get_mapping_status/',
     params: {
         csv_ref: csv_ref
     },
@@ -157,10 +187,10 @@ Ext.Ajax.request({
 
             }
         if (category=='Country'){
-           statusString='<b> Countries Matched: '+matched+', Countries Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' </b>'
+           statusString='Countries Matched: '+matched+', Countries Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total 
         }
         else {
-            statusString=' <b> Classifications Matched: '+matched+', Classifications Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' </b>'
+            statusString='Classifications Matched: '+matched+', Classifications Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total 
         }
 
         var statusArea=Ext.getCmp('statusArea')
@@ -192,7 +222,9 @@ Ext.Ajax.request({
             statusString=' <b> Classifications Matched: '+matched+', Classifications Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' </b>'
         }
         download_url=data['result_file_url']
+        download_csv_url=data['result_csv_url']
         Ext.getCmp('reportDownload').enable()
+        Ext.getCmp('csvDownload').enable()
         var statusArea=Ext.getCmp('statusArea')
         statusArea.update(statusString)
         
