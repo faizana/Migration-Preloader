@@ -10,6 +10,7 @@ var upload_form=Ext.create('Ext.form.Panel', {
 
     // The form will submit an AJAX request to this URL when submitted
     url: '/upload_csv/',
+   // waitMsg:'Loading...',
 
     // Fields will be arranged vertically, stretched to full width
     layout: 'anchor',
@@ -84,6 +85,7 @@ var upload_form=Ext.create('Ext.form.Panel', {
             var form = this.up('form').getForm();
             if (form.isValid()) {
                 form.submit({
+                    waitMsg:'Loading...',
                     success: function(form, action) {
                        csv_ref=action.result.csv_ref
                        download_url=''
@@ -195,6 +197,7 @@ Ext.Ajax.request({
 
         var statusArea=Ext.getCmp('statusArea')
         statusArea.setRawValue(statusString)
+        //Ext.Function.defer(getStatus, 500, this, [csv_ref]);
         getStatus(csv_ref)
             
         }
@@ -216,7 +219,7 @@ Ext.Ajax.request({
 
             }
         if (category=='Country'){
-           statusString='<b> Countries Matched: '+matched+', Countries Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' </b>'
+           statusString='<b> Countries Matched: '+matched+', Countries Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' </b> <br><b style="color:green;"> Completed</b>'
         }
         else {
             statusString=' <b> Classifications Matched: '+matched+', Classifications Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' </b>'
