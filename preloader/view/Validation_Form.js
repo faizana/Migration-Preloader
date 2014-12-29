@@ -229,7 +229,7 @@ Ext.Ajax.request({
         if (category=='Country'){
 			
 			pct=((matched+unmatched+emptyVals)/total)*100
-			statusString=' Countries Matched: '+matched+',\n Countries Unmatched: '+unmatched+'\n Empty Values : '+ emptyVals+',\n Total:'+total+' \n '+pct+'% Complete'	
+			statusString=' Countries Matched: '+matched+',\n Countries Unmatched: '+unmatched+',\n Empty Values : '+ emptyVals+',\n Total: '+total+' \n '+pct+'% Complete'	
 			
 			
 			
@@ -237,7 +237,7 @@ Ext.Ajax.request({
         }
         else {
 			pct=((matched+unmatched+emptyVals)/total)*100
-			statusString=' Classifications Matched: '+matched+',\n Classifications Unmatched: '+unmatched+'\n Empty Values : '+ emptyVals+',\n Total:'+total+' \n '+pct+'% Complete'
+			statusString=' Classifications Matched: '+matched+',\n Classifications Unmatched: '+unmatched+',\n Empty Values : '+ emptyVals+',\n Total: '+total+' \n '+pct+'% Complete'
             
         }
         download_url=data['result_file_url']
