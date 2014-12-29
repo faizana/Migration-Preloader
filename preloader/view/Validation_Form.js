@@ -1,7 +1,7 @@
 var download_url=''
 var download_csv_url=''
 var category='Country'
-var statusTextHTML='<tbody><tr id="statusArea-inputRow"><td id="statusArea-labelCell" style="" valign="top" halign="left" width="105" class="x-field-label-cell"><label id="statusArea-labelEl" for="statusArea-inputEl" class="x-form-item-label x-unselectable x-form-item-label-left" style="width:100px;margin-right:5px;" unselectable="on">Status:</label></td><td class="x-form-item-body " id="statusArea-bodyEl" colspan="2" role="presentation" style="width: 100%;"><textarea id="statusArea-inputEl" name="statusArea-inputEl" rows="4" cols="20" class="x-form-field x-form-text x-form-textarea" autocomplete="off" aria-invalid="false" data-errorqtip="" style="width: 100%;"></textarea></td></tr></tbody>'
+//var statusTextHTML='<tbody><tr id="statusArea-inputRow"><td id="statusArea-labelCell" style="" valign="top" halign="left" width="105" class="x-field-label-cell"><label id="statusArea-labelEl" for="statusArea-inputEl" class="x-form-item-label x-unselectable x-form-item-label-left" style="width:100px;margin-right:5px;" unselectable="on">Status:</label></td><td class="x-form-item-body " id="statusArea-bodyEl" colspan="2" role="presentation" style="width: 100%;"><textarea id="statusArea-inputEl" name="statusArea-inputEl" rows="4" cols="20" class="x-form-field x-form-text x-form-textarea" autocomplete="off" aria-invalid="false" data-errorqtip="" style="width: 100%;"></textarea></td></tr></tbody>'
 var upload_form=Ext.create('Ext.form.Panel', {
     title: 'Preloader',
     bodyPadding: 5,
@@ -60,7 +60,7 @@ var upload_form=Ext.create('Ext.form.Panel', {
         buttonText: 'Select file...',
 		listeners:{
 			'change':function(ta, value, eOpts){
-				Ext.getCmp('statusArea').update(statusTextHTML)
+				Ext.getCmp('statusArea').update('')
 				
 			}
 		}
@@ -71,6 +71,7 @@ var upload_form=Ext.create('Ext.form.Panel', {
         fieldLabel: 'Status',
         // maxHeight: 100,
         anchor    : '100%',
+        html:'',
         submitValue:false,
         id:'statusArea',
 		
@@ -90,7 +91,6 @@ var upload_form=Ext.create('Ext.form.Panel', {
         disabled: true,
         handler: function() {
             var form = this.up('form').getForm();
-			Ext.getCmp('statusArea').setRawValue('')
             if (form.isValid()) {
                 form.submit({
                     waitMsg:'Loading...',
@@ -203,7 +203,7 @@ Ext.Ajax.request({
         }
 
         var statusArea=Ext.getCmp('statusArea')
-        statusArea.setRawValue(statusString)
+        statusArea.update(statusString)
         getStatus(csv_ref)
             
         }
