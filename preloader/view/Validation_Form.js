@@ -1,6 +1,7 @@
 var download_url=''
 var download_csv_url=''
 var category='Country'
+var statusTextHTML='<table class="x-field x-table-plain x-form-item x-field-default x-anchor-form-item" cellpadding="0" id="statusArea" style="overflow: auto; table-layout: fixed; width: 588px;"><tbody><tr id="statusArea-inputRow"><td id="statusArea-labelCell" style="" valign="top" halign="left" width="105" class="x-field-label-cell"><label id="statusArea-labelEl" for="statusArea-inputEl" class="x-form-item-label x-unselectable x-form-item-label-left" style="width:100px;margin-right:5px;" unselectable="on">Status:</label></td><td class="x-form-item-body " id="statusArea-bodyEl" colspan="2" role="presentation" style="width: 100%;"><textarea id="statusArea-inputEl" name="statusArea-inputEl" rows="4" cols="20" class="x-form-field x-form-text x-form-textarea" autocomplete="off" aria-invalid="false" data-errorqtip="" style="width: 100%;"></textarea></td></tr></tbody></table>'
 var upload_form=Ext.create('Ext.form.Panel', {
     title: 'Preloader',
     bodyPadding: 5,
@@ -165,6 +166,7 @@ Ext.Ajax.request({
     },
     success: function(response){
         var text = response.responseText;
+		Ext.getCmp('statusArea').update(statusTextHTML)
         Ext.getCmp('statusArea').setRawValue('')
         data=Ext.decode(text)
         var statusString=''
