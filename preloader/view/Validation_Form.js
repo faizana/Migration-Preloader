@@ -66,7 +66,13 @@ var upload_form=Ext.create('Ext.form.Panel', {
         // maxHeight: 100,
         anchor    : '100%',
         submitValue:false,
-        id:'statusArea'
+        id:'statusArea',
+		listeners:{
+			'change':function(ta, value, eOpts){
+				Ext.getCmp('statusArea').update(statusTextHTML)
+				
+			}
+		}
     }
             ],
         
@@ -82,7 +88,6 @@ var upload_form=Ext.create('Ext.form.Panel', {
         formBind: true, //only enabled once the form is valid
         disabled: true,
         handler: function() {
-			Ext.getCmp('statusArea').update(statusTextHTML)
             var form = this.up('form').getForm();
             if (form.isValid()) {
                 form.submit({
