@@ -58,12 +58,12 @@ var upload_form=Ext.create('Ext.form.Panel', {
         allowBlank: false,
         anchor: '100%',
         buttonText: 'Select file...',
-		listeners:{
-			'change':function(ta, value, eOpts){
-				Ext.getCmp('statusArea').update('')
-				
-			}
-		}
+//		listeners:{
+//			'change':function(ta, value, eOpts){
+//				Ext.getCmp('statusArea').update('')
+//				
+//			}
+//		}
     },{
         xtype     : 'textareafield',
         grow      : false,
@@ -71,7 +71,6 @@ var upload_form=Ext.create('Ext.form.Panel', {
         fieldLabel: 'Status',
         // maxHeight: 100,
         anchor    : '100%',
-        html:'',
         submitValue:false,
         id:'statusArea',
 		
@@ -196,14 +195,15 @@ Ext.Ajax.request({
 
             }
         if (category=='Country'){
-           statusString='<a> Countries Matched: '+matched+', Countries Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +'</a>'
+           statusString=' Countries Matched: '+matched+', Countries Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total 
         }
         else {
-            statusString='<a> Classifications Matched: '+matched+', Classifications Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total+' </a>' 
+            statusString=' Classifications Matched: '+matched+', Classifications Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total
         }
 
         var statusArea=Ext.getCmp('statusArea')
-        statusArea.update(statusString)
+		statusArea.setFieldStyle('font-weight:normal')
+        statusArea.setRawValue(statusString)
         getStatus(csv_ref)
             
         }
@@ -226,21 +226,21 @@ Ext.Ajax.request({
             }
         if (category=='Country'){
 			if (matched+unmatched+emptyVals==total){
-			statusString='<b> Countries Matched: '+matched+', Countries Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' </b> <br><b style="color:green;"> Completed</b>'	
+			statusString=' Countries Matched: '+matched+', Countries Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' Completed'	
 			}
 			
 			else if (matched+unmatched+emptyVals<total){
-			statusString='<b> Countries Matched: '+matched+', Countries Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' </b> <br><b style="color:red;"> Incomplete</b>'	
+			statusString=' Countries Matched: '+matched+', Countries Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' Incomplete'	
 			}
            
         }
         else {
 			if (matched+unmatched+emptyVals==total){
-			statusString=' <b> Classifications Matched: '+matched+', Classifications Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' </b> <br><b style="color:green;"> Completed</b>'	
+			statusString='  Classifications Matched: '+matched+', Classifications Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' Completed'	
 			}
 			
 			else if (matched+unmatched+emptyVals<total){
-			statusString=' <b> Classifications Matched: '+matched+', Classifications Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' </b> <br><b style="color:red;"> Incomplete</b>'	
+			statusString='  Classifications Matched: '+matched+', Classifications Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' Incomplete'	
 			}
             
         }
@@ -249,7 +249,8 @@ Ext.Ajax.request({
         Ext.getCmp('reportDownload').enable()
         Ext.getCmp('csvDownload').enable()
         var statusArea=Ext.getCmp('statusArea')
-        statusArea.update(statusString)
+		statusArea.setFieldStyle('font-weight:bold')
+        statusArea.setRawValue(statusString)
         
         }
         // Ext.getCmp('statusArea').setRawValue
@@ -261,7 +262,7 @@ Ext.Ajax.request({
 var addPanelSwitchButton=function (){
     var newDiv = document.createElement('div');
     newDiv.id='switchDiv';
-    newDiv.innerHTML='<ul id="switchElem" style="margin-left:20px;margin-top:20px;"> <li><a href="#">Artstor Country</a></li><li class="on"><a href="#">Artstor Classification</a></li></ul>'
+    newDiv.innerHTML='<ul id="switchElem" style="margin-left:20px;margin-top:20px;"> <li><a href="#">Artstor Country</li><li class="on"><a href="#">Artstor Classification</li></ul>'
     document.body.appendChild(newDiv);
 
 }
