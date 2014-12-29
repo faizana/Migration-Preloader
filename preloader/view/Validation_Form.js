@@ -82,6 +82,7 @@ var upload_form=Ext.create('Ext.form.Panel', {
         formBind: true, //only enabled once the form is valid
         disabled: true,
         handler: function() {
+			Ext.getCmp('statusArea').update(statusTextHTML)
             var form = this.up('form').getForm();
             if (form.isValid()) {
                 form.submit({
@@ -166,7 +167,7 @@ Ext.Ajax.request({
     },
     success: function(response){
         var text = response.responseText;
-		Ext.getCmp('statusArea').update(statusTextHTML)
+		
         Ext.getCmp('statusArea').setRawValue('')
         data=Ext.decode(text)
         var statusString=''
