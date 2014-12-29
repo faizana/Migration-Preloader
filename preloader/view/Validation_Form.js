@@ -204,7 +204,7 @@ Ext.Ajax.request({
         }
 
         var statusArea=Ext.getCmp('statusArea')
-		statusArea.setFieldStyle('font-weight:normal')
+		statusArea.setFieldStyle('font-weight:normal;color:black;')
         statusArea.setRawValue(statusString)
         getStatus(csv_ref)
             
