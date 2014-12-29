@@ -90,6 +90,7 @@ var upload_form=Ext.create('Ext.form.Panel', {
         disabled: true,
         handler: function() {
             var form = this.up('form').getForm();
+			Ext.getCmp('statusArea').setRawValue('')
             if (form.isValid()) {
                 form.submit({
                     waitMsg:'Loading...',
@@ -173,8 +174,6 @@ Ext.Ajax.request({
     },
     success: function(response){
         var text = response.responseText;
-		
-        Ext.getCmp('statusArea').setRawValue('')
         data=Ext.decode(text)
         var statusString=''
         var matched=0;
