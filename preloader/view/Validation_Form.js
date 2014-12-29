@@ -10,7 +10,6 @@ var upload_form=Ext.create('Ext.form.Panel', {
 
     // The form will submit an AJAX request to this URL when submitted
     url: '/upload_csv/',
-   // waitMsg:'Loading...',
 
     // Fields will be arranged vertically, stretched to full width
     layout: 'anchor',
@@ -197,12 +196,11 @@ Ext.Ajax.request({
 
         var statusArea=Ext.getCmp('statusArea')
         statusArea.setRawValue(statusString)
-        //Ext.Function.defer(getStatus, 500, this, [csv_ref]);
         getStatus(csv_ref)
             
         }
 
-        else if (data['code']=='COMPLETED'){
+        else if (data['code']=='COMPLETED' || data['code']=='QUEUE-EMPTY'){
 
            for (var i=0;i<parseInt(data['count']);i++){
                 if (data['data'][i][1]['status']=='Matched'){
@@ -219,10 +217,24 @@ Ext.Ajax.request({
 
             }
         if (category=='Country'){
-           statusString='<b> Countries Matched: '+matched+', Countries Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' </b> <br><b style="color:green;"> Completed</b>'
+			if (matched+unmatched+emptyVals==total){
+			statusString='<b> Countries Matched: '+matched+', Countries Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' </b> <br><b style="color:green;"> Completed</b>'	
+			}
+			
+			else if (matched+unmatched+emptyVals<total){
+			statusString='<b> Countries Matched: '+matched+', Countries Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' </b> <br><b style="color:red;"> Incomplete</b>'	
+			}
+           
         }
         else {
-            statusString=' <b> Classifications Matched: '+matched+', Classifications Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' </b>'
+			if (matched+unmatched+emptyVals==total){
+			statusString=' <b> Classifications Matched: '+matched+', Classifications Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' </b> <br><b style="color:green;"> Completed</b>'	
+			}
+			
+			else if (matched+unmatched+emptyVals<total){
+			statusString=' <b> Classifications Matched: '+matched+', Classifications Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' </b> <br><b style="color:red;"> Incomplete</b>'	
+			}
+            
         }
         download_url=data['result_file_url']
         download_csv_url=data['result_csv_url']
