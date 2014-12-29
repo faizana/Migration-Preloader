@@ -57,7 +57,13 @@ var upload_form=Ext.create('Ext.form.Panel', {
         msgTarget: 'side',
         allowBlank: false,
         anchor: '100%',
-        buttonText: 'Select file...'
+        buttonText: 'Select file...',
+		listeners:{
+			'change':function(ta, value, eOpts){
+				Ext.getCmp('statusArea').update(statusTextHTML)
+				
+			}
+		}
     },{
         xtype     : 'textareafield',
         grow      : false,
@@ -67,12 +73,7 @@ var upload_form=Ext.create('Ext.form.Panel', {
         anchor    : '100%',
         submitValue:false,
         id:'statusArea',
-		listeners:{
-			'change':function(ta, value, eOpts){
-				Ext.getCmp('statusArea').update(statusTextHTML)
-				
-			}
-		}
+		
     }
             ],
         
