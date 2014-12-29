@@ -196,10 +196,10 @@ Ext.Ajax.request({
 
             }
         if (category=='Country'){
-           statusString='Countries Matched: '+matched+', Countries Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total 
+           statusString='<a> Countries Matched: '+matched+', Countries Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +'</a>'
         }
         else {
-            statusString='Classifications Matched: '+matched+', Classifications Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total 
+            statusString='<a> Classifications Matched: '+matched+', Classifications Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total+' </a>' 
         }
 
         var statusArea=Ext.getCmp('statusArea')
