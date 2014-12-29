@@ -66,7 +66,7 @@ var upload_form=Ext.create('Ext.form.Panel', {
 //		}
     },{
         xtype     : 'textareafield',
-        grow      : false,
+        grow      : true,
         autoScroll:true,
         fieldLabel: 'Status',
         // maxHeight: 100,
@@ -195,10 +195,12 @@ Ext.Ajax.request({
 
             }
         if (category=='Country'){
-           statusString=' Countries Matched: '+matched+', Countries Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total 
+		   pct=((matched+unmatched+emptyVals)/total)*100
+           statusString=' Countries Matched: '+matched+',\n Countries Unmatched: '+unmatched+'\n Empty Values : '+ emptyVals+',\n Total:'+total+' \n '+pct+'% Complete'
         }
         else {
-            statusString=' Classifications Matched: '+matched+', Classifications Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total
+            pct=((matched+unmatched+emptyVals)/total)*100
+           statusString=' Classifications Matched: '+matched+',\n Classifications Unmatched: '+unmatched+'\n Empty Values : '+ emptyVals+',\n Total:'+total+' \n '+pct+'% Complete'
         }
 
         var statusArea=Ext.getCmp('statusArea')
@@ -225,23 +227,17 @@ Ext.Ajax.request({
 
             }
         if (category=='Country'){
-			if (matched+unmatched+emptyVals==total){
-			statusString=' Countries Matched: '+matched+', Countries Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' Completed'	
-			}
 			
-			else if (matched+unmatched+emptyVals<total){
-			statusString=' Countries Matched: '+matched+', Countries Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' Incomplete'	
-			}
+			pct=((matched+unmatched+emptyVals)/total)*100
+			statusString=' Countries Matched: '+matched+',\n Countries Unmatched: '+unmatched+'\n Empty Values : '+ emptyVals+',\n Total:'+total+' \n '+pct+'% Complete'	
+			
+			
+			
            
         }
         else {
-			if (matched+unmatched+emptyVals==total){
-			statusString='  Classifications Matched: '+matched+', Classifications Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' Completed'	
-			}
-			
-			else if (matched+unmatched+emptyVals<total){
-			statusString='  Classifications Matched: '+matched+', Classifications Unmatched: '+unmatched+' Empty Values : '+ emptyVals+', Total:'+total +' Incomplete'	
-			}
+			pct=((matched+unmatched+emptyVals)/total)*100
+			statusString=' Classifications Matched: '+matched+',\n Classifications Unmatched: '+unmatched+'\n Empty Values : '+ emptyVals+',\n Total:'+total+' \n '+pct+'% Complete'
             
         }
         download_url=data['result_file_url']
@@ -249,7 +245,11 @@ Ext.Ajax.request({
         Ext.getCmp('reportDownload').enable()
         Ext.getCmp('csvDownload').enable()
         var statusArea=Ext.getCmp('statusArea')
-		statusArea.setFieldStyle('font-weight:bold')
+		pct=((matched+unmatched+emptyVals)/total)*100
+		if (pct==100)
+		statusArea.setFieldStyle('font-weight:bold;color:green;')
+		else
+		statusArea.setFieldStyle('font-weight:bold;color:red;')
         statusArea.setRawValue(statusString)
         
         }
