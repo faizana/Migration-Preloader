@@ -1,7 +1,6 @@
 var download_url=''
 var download_csv_url=''
 var category='Country'
-//var statusTextHTML='<tbody><tr id="statusArea-inputRow"><td id="statusArea-labelCell" style="" valign="top" halign="left" width="105" class="x-field-label-cell"><label id="statusArea-labelEl" for="statusArea-inputEl" class="x-form-item-label x-unselectable x-form-item-label-left" style="width:100px;margin-right:5px;" unselectable="on">Status:</label></td><td class="x-form-item-body " id="statusArea-bodyEl" colspan="2" role="presentation" style="width: 100%;"><textarea id="statusArea-inputEl" name="statusArea-inputEl" rows="4" cols="20" class="x-form-field x-form-text x-form-textarea" autocomplete="off" aria-invalid="false" data-errorqtip="" style="width: 100%;"></textarea></td></tr></tbody>'
 var upload_form=Ext.create('Ext.form.Panel', {
     title: 'Preloader',
     bodyPadding: 5,
@@ -57,13 +56,7 @@ var upload_form=Ext.create('Ext.form.Panel', {
         msgTarget: 'side',
         allowBlank: false,
         anchor: '100%',
-        buttonText: 'Select file...',
-//		listeners:{
-//			'change':function(ta, value, eOpts){
-//				Ext.getCmp('statusArea').update('')
-//				
-//			}
-//		}
+        buttonText: 'Select file...'
     },{
         xtype     : 'textareafield',
         grow      : true,
@@ -72,8 +65,7 @@ var upload_form=Ext.create('Ext.form.Panel', {
         // maxHeight: 100,
         anchor    : '100%',
         submitValue:false,
-        id:'statusArea',
-		
+        id:'statusArea'
     }
             ],
         
@@ -100,6 +92,7 @@ var upload_form=Ext.create('Ext.form.Panel', {
                        download_csv_url=''
                        Ext.getCmp('reportDownload').disable()
                        Ext.getCmp('csvDownload').disable()
+					   Ext.getBody().mask('<div style="border-style:none;" class="x-mask-loading"><div style="border-style:none;">Processing</div></div>');
                        Ext.Function.defer(getStatus, 2000, this, [csv_ref]);
 
                        
@@ -173,6 +166,7 @@ Ext.Ajax.request({
         csv_ref: csv_ref
     },
     success: function(response){
+		Ext.getBody().unmask();
         var text = response.responseText;
         data=Ext.decode(text)
         var statusString=''
