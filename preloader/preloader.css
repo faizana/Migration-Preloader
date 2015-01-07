@@ -65,3 +65,8 @@ ul li.on a{
     color:#7BBA47;
     cursor: default;
 }
+
+.x-mask-loading {
+	background-image: url(../img/overlay.gif) !important;
+	background-repeat:repeat;
+}
