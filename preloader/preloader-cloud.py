@@ -2,7 +2,7 @@ import cherrypy
 from cherrypy.lib import static
 import os
 from dateutil.parser import parser
-#from date_parser import start_date_parse
+from date_parser import start_date_parse
 import csv
 import simplejson
 import os
@@ -23,12 +23,12 @@ process_queue=Queue(maxsize=0)
 tutconf = os.path.join(os.path.dirname(__file__), 'tutorial.conf')
 class preloader_interface(object):
 
-#    def run_simple_date_parser(self,date_string):
-        # print date_string
-        # date_string=str(date_string)
-#        result=start_date_parse(date_string)
-#        return result
-#    run_simple_date_parser.exposed=True
+    def run_simple_date_parser(self,date_string):
+        print date_string
+        date_string=str(date_string)
+        result=start_date_parse(date_string)
+        return result
+    run_simple_date_parser.exposed=True
 
 
     def get_artstor_country_list(self,page,start,limit,_dc):
@@ -281,6 +281,48 @@ class preloader_interface(object):
                     mapping_status[csv_ref]['converted_csv']=False
                 process_queue.put(mapping_status)
 
+        elif category=='Date':
+            c=0
+            mapping_status[csv_ref]={}
+            for row in csv_dict:
+                result_dict[row[id_column]]={}
+                c+=1
+                query_term=str(row[validate_column])
+                if query_term.strip()!='':
+                    try:
+                        ed,ld,logic=start_date_parse(query_term)
+                        result_dict[row[id_column]]['status']='Converted'
+                        result_dict[row[id_column]]['query_term']=query_term
+                        result_dict[row[id_column]]['Earliest Date']=ed
+                        result_dict[row[id_column]]['Latest Date']=ld
+                        result_dict[row[id_column]]['Logic']=logic
+                    except:
+                        result_dict[row[id_column]]['status']='Exception'
+                        result_dict[row[id_column]]['query_term']=query_term
+                        result_dict[row[id_column]]['Earliest Date']=''
+                        result_dict[row[id_column]]['Latest Date']=''
+                        result_dict[row[id_column]]['Logic']=''
+                else:
+                        result_dict[row[id_column]]['status']='Null Value'
+                        result_dict[row[id_column]]['query_term']=''
+                        result_dict[row[id_column]]['Earliest Date']=''
+                        result_dict[row[id_column]]['Latest Date']=''
+                        result_dict[row[id_column]]['Logic']=''
+
+                mapping_status[csv_ref]['result']=result_dict
+                mapping_status[csv_ref]['category']=category
+                if 'artstor earliest date' and 'artstor latest date' in [x.lower().strip() for x in row.keys() if x is not None]:
+                    mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c,validate_column,id_column)
+                else:
+                    mapping_status[csv_ref]['converted_csv']=False
+
+
+
+
+
+
+
+
 
 
 
@@ -296,32 +338,7 @@ class preloader_interface(object):
         return class_term_dict
 
 
-def rearrange_columns(hl,vc,idc,category):
-    removed=False
-    if category=='Country':
-        hl.remove(idc)
-        hl.remove(vc)
-        if 'Artstor Country' in hl:
-            removed=True
-            hl.remove('Artstor Country')
-        hl.sort()
-        if removed:
-            hl.insert(0,'Artstor Country')
-        hl.insert(0,vc)
-        hl.insert(0,idc)
-        return hl
-    elif category=='Classification':
-        hl.remove(idc)
-        hl.remove(vc)
-        if 'Artstor Classification' in hl:
-            removed=True
-            hl.remove('Artstor Classification')
-        hl.sort()
-        if removed:
-            hl.insert(0,'Artstor Classification')
-        hl.insert(0,vc)
-        hl.insert(0,idc)
-        return hl
+
 
 def write_modified_csv(row,rd,fname,category,counter,vc,idc):
     f_path='/home/ana/faizan/preloader_csvs/converted_csvs/'+'converted-'+fname
@@ -329,12 +346,14 @@ def write_modified_csv(row,rd,fname,category,counter,vc,idc):
     csv_writer=csv.writer(f,dialect='excel',delimiter=',')
     hl=row.keys()
     if counter==1:
-        #hl=rearrange_columns(hl,vc,idc,category)
+        hl.sort()
+        # hl=rearrange_columns(hl,vc,idc,category)
         csv_writer.writerow(hl)
     new_row=[]
     if category=='Country':
         for heads in hl:
             if heads.lower().strip()=='artstor country' and 'artstor_country' in rd.keys():
+                index=[x.lower() for x in hl].index(heads.lower().strip())
                 new_row.append(rd['artstor_country'])
             else:
                 new_row.append(row[heads])
@@ -350,6 +369,16 @@ def write_modified_csv(row,rd,fname,category,counter,vc,idc):
                 new_row.append(rd['artstor_classification'])
             else:
                 new_row.append(row[heads])
+    elif category=='Date':
+        for heads in hl:
+            if heads.lower().strip()=='earliest date' and 'Earliest Date' in rd.keys():
+                new_row.append(rd['Earliest Date'])
+            elif heads.lower().strip()=='latest date' and 'Latest Date' in rd.keys():
+                new_row.append(rd['Latest Date'])
+            else:
+                new_row.append(row[heads])
+
+
 
     csv_writer.writerow(new_row)
     return os.path.abspath(f_path)
@@ -406,7 +435,7 @@ def generate_result_csv(data_obj,csv_ref,category):
                 tgn_id=''
                 logic=''
             csv_writer.writerow([id,qt,logic,status,ac,tgn_id])
-    else:
+    elif category=='Classification':
         hl=['ID','Query Term','Logic','Status','Artstor Classification']
         csv_writer.writerow(hl)
         for vals in data_obj:
@@ -424,6 +453,28 @@ def generate_result_csv(data_obj,csv_ref,category):
                 logic=''
 
             csv_writer.writerow([id,qt,logic,status,ac])
+    else:
+        hl=['ID','Query Term','Logic','Status','Earliest Date','Latest Date']
+        csv_writer.writerow(hl)
+        for vals in data_obj:
+            if vals[1]['status']=='Converted':
+                id=vals[0]
+                status=vals[1]['status']
+                ed=vals[1]['Earliest Date']
+                ld=vals[1]['Latest Date']
+                qt=vals[1]['query_term']
+                logic=vals[1]['Logic']
+            else:
+                id=vals[0]
+                status=vals[1]['status']
+                ed=''
+                ld=''
+                qt=vals[1]['query_term']
+                logic=''
+            csv_writer.writerow([id,qt,logic,status,ed,ld])
+
+
+
 
 
     # print data_obj[0]
@@ -447,4 +498,3 @@ if __name__ == '__main__':
 else:
     # This branch is for the test suite; you can ignore it.
     cherrypy.tree.mount(preloader_interface(), config=tutconf)
-

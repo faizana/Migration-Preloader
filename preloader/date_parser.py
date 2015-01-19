@@ -17,6 +17,7 @@ def parse_date(input_string):
     # date_string = input_string.upper().replace(' ','') #remove whitespaces
     date_string = input_string.upper()
     date_string = remove_syms(date_string)
+    logic_string=''
     # print date_string
     # date_string=date_string.replace('?','')
     # date_string=date_string.replace('CIRCA','')
@@ -35,7 +36,8 @@ def parse_date(input_string):
     # print is_month_day_year_format,contains_dots_with_year
     if is_month_day_year_format and contains_dots_with_year==False:
         pip_parser=find_date(date_string)
-        return pip_parser,pip_parser
+        logic_string='Simple month_day_year_format detected in '+input_string
+        return pip_parser,pip_parser,logic_string
 
         #
     elif is_range(year_string) and bool(re.search('\D+',year_string.replace('-','')))==False: #and contains_epoch_with_hyp==False and year_string.count('-')<2 and contains_date_with_words_and_hyp==False and contains_s==False:
@@ -44,7 +46,6 @@ def parse_date(input_string):
     elif is_range(year_string) and bool(re.search('\D+',year_string.replace('-','')))==True:
         # print 'mkc'
         date_string = input_string.upper().replace(' ','') #remove whitespaces
-        date_string=date_string.replace('?','')
         if date_string.find('CA.')!=-1:
             date_string=date_string.replace('CA.','')
             if bool(re.search('(-)\d+(-)',date_string)):
@@ -62,6 +63,7 @@ def parse_date(input_string):
 
 
         date_string=re.sub(r';|AND|TO','-',date_string)
+        logic_string='alphanumeric range detected in '+input_string
         # print date_string
         contains_s=_ends_with_s(date_string.replace(' ',''))
         contains_date_with_words_and_hyp=_contains_date_with_words_and_hyp(date_string)
@@ -78,7 +80,8 @@ def parse_date(input_string):
                 for c in range(z_count):
                     trailing_n+='9'
                 ld=date_string[1][:-z_count]+trailing_n
-                return ed,ld
+                logic_string+='. "s" found appended to year, converted to range accordingly'
+                return ed,ld,logic_string
 
 
             z_count=date_string.count('0')
@@ -89,22 +92,26 @@ def parse_date(input_string):
                 trailing_n+='9'
             ed=date_string[:-z_count]+trailing_z
             ld=date_string[:-z_count]+trailing_n
-            return ed,ld
+            logic_string+='. Simple date format without "-"found  converted to ED/LD accordingly'
+            return ed,ld,logic_string
 
 
         elif contains_date_with_words_and_hyp:
             if bool(re.search('\D+\d+(-)\d+$',date_string)):
                 ed,ld=start_date_parse(re.sub('[A-Z]+','',date_string))
-                return ed,ld
+                logic_string+='. Date found containing words with "-", applied range logic to convert'
+                return ed,ld,logic_string
             elif bool(re.search('^\D+\d+(-)\D+\d+$|^\d+(-)\D+\d+$',date_string)):
                 ed=re.sub('\D+','',date_string.split('-')[0])
                 ld=re.sub('\D+','',date_string.split('-')[1])
-                return ed,ld
+                logic_string+='. Date found containing words with "-", applied range logic to convert'
+                return ed,ld,logic_string
 
             get_regex=re.compile(r'\d+$')
             ed=get_regex.search(date_string).group()
             ld=ed
-            return ed,ld
+            logic_string='Single date detected in alphanumeric, Earliest and Latest date will be same'
+            return ed,ld,logic_string
         elif contains_epoch_with_hyp:
             year_string=date_string.replace(' ','')
             print 'here'
@@ -114,12 +121,14 @@ def parse_date(input_string):
             is_bc_date=re.compile(r'BC-|-BC|BC$')
             if bool(get_exact_string.search((year_string))):
                 ed,ld=start_date_parse(get_exact_string.search(year_string).group().replace('-',','))
-                return ed,ld
+                logic_string+='.Epoch detected within range,parsing to numeric format'
+                return ed,ld,logic_string
             elif bool(get_exact_string1.search((year_string))):
                 # print year_string
                 exp=re.search('\d+\D+(CENTURY)$|^\d+(-)\d+',year_string)
                 ed,ld=start_date_parse(exp.group())
-                return ed,ld
+                logic_string+='.Epoch detected within range,parsing to numeric format'
+                return ed,ld,logic_string
             elif bool(is_bc_date.search(year_string)):
                 bc_ad=crosses_bc_ad_boundary(year_string)
                 if bc_ad:
@@ -130,17 +139,20 @@ def parse_date(input_string):
                 exp=year_string.split('-')
                 ed=int(re.search('\d+',exp[0]).group())*-1
                 ld=int(re.search('\d+',exp[1]).group())*-1
-                return ed,ld
+                logic_string+='BC/AD Format detected,parsing to negative/positive numeric date accordingly'
+                return ed,ld,logic_string
 
 
 
 
         else:
+            # logic_string='No specific range format detected, applying simple range parser'
             return parse_ranges(date_string)
 
     elif contains_dots_with_year:
+        logic_string='Date with dots detected,parsing to numeric format'
         get_year=re.sub('\d+\.\d+\.|\d+\.','',date_string)
-        return get_year,get_year
+        return get_year,get_year,logic_string
 
     # elif contains_canadian_format:
     #     years=date_string.split('-')
@@ -164,7 +176,7 @@ def parse_date(input_string):
                 trailing_n+='9'
             ed=date_string[:-z_count]+trailing_z
             ld=date_string[:-z_count]+trailing_n
-            return ed,ld
+            return ed,ld,'"s" found appended to '+input_string+'. Parsing into ED/LD'
 
     elif contains_forward_slash:
         date_string=date_string.split('/')
@@ -174,7 +186,7 @@ def parse_date(input_string):
         else:
             ed=date_string[0]
             ld=date_string[0][:(len(date_string[0])-len(date_string[1]))]+date_string[1]
-        return ed,ld
+        return ed,ld,'"/" found in '+input_string+' converting accordingly'
     elif contains_complex_epoch:
         years=date_string.split(',')
         epochs=[]
@@ -182,7 +194,8 @@ def parse_date(input_string):
             epochs.append(re.sub('\D+','',y))
         ed=(int(epochs[0])-1)*calculate_year_multiplier(years[0]+' CENTURY')
         ld=(int(epochs[1])-1)*calculate_year_multiplier(years[1])+99
-        return ed,ld
+        logic_string='Complex epoch detected in'+input_string
+        return ed,ld,logic_string
 
     else:
 
@@ -192,68 +205,13 @@ def parse_date(input_string):
         return adjust_for_quarters(date_string) + year - 100, year - 1
     elif is_bc(date_string):
         year=re.sub('\D+','',date_string)
+        logic_string='BC date found,converting to negative numeric format'
         # print year,date_string
-        return int(year) * -1, int(year) * -1
+        return int(year) * -1, int(year) * -1,logic_string
     elif is_reverse_chronology(date_string):
+        logic_string='Reverse Chronology format detected, converting to ED/LD'
         year = datetime.now().year - year
-    # elif contains_s:
-    #     date_string=date_string.replace('S','')
-    #     if date_string.find('-')!=-1:
-    #         date_string=date_string.split('-')
-    #         ed=date_string[0]
-    #         z_count=date_string[1].count('0')
-    #         trailing_n=''
-    #         for c in range(z_count):
-    #             trailing_n+='9'
-    #         ld=date_string[1][:-z_count]+trailing_n
-    #         return ed,ld
-    #
-    #
-    #     z_count=date_string.count('0')
-    #     trailing_z=''
-    #     trailing_n=''
-    #     for c in range(z_count):
-    #         trailing_z+='0'
-    #         trailing_n+='9'
-    #     ed=date_string[:-z_count]+trailing_z
-    #     ld=date_string[:-z_count]+trailing_n
-    #     return ed,ld
-    # elif contains_forward_slash:
-    #     date_string=date_string.split('/')
-    #     if len(date_string[0].strip())==len(date_string[1].strip()):
-    #         ed=date_string[0]
-    #         ld=date_string[1]
-    #     else:
-    #         ed=date_string[0]
-    #         ld=date_string[0][:(len(date_string[0])-len(date_string[1]))]+date_string[1]
-    #     return ed,ld
-    # elif year_string.count('-')>=2:
-    #     year_string=year_string.replace('-','')
-    #     year_string = find_date(year_string)
-    #     return year_string[0],year_string[0]
-    # elif contains_date_with_words_and_hyp:
-    #     get_regex=re.compile(r'\d+$')
-    #     ed=get_regex.search(date_string).group()
-    #     ld=ed
-    #     return ed,ld
-    # elif contains_epoch_with_hyp:
-    #     get_exact_string=re.compile(r'[A-Z]+\d+[A-Z][A-Z](CENTURY-)[A-Z]+\d+[A-Z][A-Z](CENTURY)')
-    #     get_exact_string1=re.compile(r'[A-Z]+(-\d+[A-Z][A-Z]CENTURY)|[A-Z]+(-[A-Z]+\d+[A-Z][A-Z]CENTURY)|[A-Z]+(-\d+[A-Z]+\d+[A-Z]+CENTURY)') #MID-19THCENTURY,MID-TOLATE19THCENTURY
-    #     if bool(get_exact_string.search((year_string))):
-    #         ed,ld=start_date_parse(get_exact_string.search(year_string).group().replace('-',','))
-    #     elif bool(get_exact_string1.search((year_string))):
-    #         exp=re.sub(r'^\D+\d+[A-Z][A-Z](CENTURY)$|^\D+\d+[A-Z]+\d+[A-Z]+(CENTURY)$',r'\d+[A-Z][A-Z](CENTURY)',year_string)
-    #         ed,ld=start_date_parse(exp)
-    #     return ed,ld
-
-
-
-
-
-
-
-
-    return year, year
+    return year, year,logic_string
 
 def _contains_canadian_format(val):
     val=val.replace(' ','')
@@ -319,7 +277,7 @@ def parse_ranges(date_string):
     if int(end) < 100:
         end = (int(start[:2]) * 100) + int(end)
 
-    return int(start), int(end)
+    return int(start), int(end),'Numeric year range detected in '+date_string
     
 def crosses_bc_ad_boundary(date_string):
     if is_bc(date_string):
