@@ -1,7 +1,7 @@
 var countryProxy={
 			type: 'rest',
 			timeout: 180000,
-			url : 'http://localhost:9090/get_artstor_country_list/',
+			url : '/get_artstor_country_list/',
 			autoLoad: true,
 			reader: {
 				type: 'json',
