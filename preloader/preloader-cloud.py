@@ -243,7 +243,7 @@ class preloader_interface(object):
                 mapping_status[csv_ref]['result']=result_dict
                 mapping_status[csv_ref]['category']=category
                 if 'artstor country' in [x.lower().strip() for x in row.keys() if x is not None]:
-                    mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c)
+                    mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c,validate_column)
                 else:
                     mapping_status[csv_ref]['converted_csv']=False
                 process_queue.put(mapping_status)
@@ -276,7 +276,7 @@ class preloader_interface(object):
                 mapping_status[csv_ref]['result']=result_dict
                 mapping_status[csv_ref]['category']=category
                 if 'artstor classification' in [x.lower().strip() for x in row.keys() if x is not None]:
-                    mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c)
+                    mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c,validate_column,id_column)
                 else:
                     mapping_status[csv_ref]['converted_csv']=False
                 process_queue.put(mapping_status)
@@ -296,13 +296,40 @@ class preloader_interface(object):
         return class_term_dict
 
 
+def rearrange_columns(hl,vc,idc,category):
+    removed=False
+    if category=='Country':
+        hl.remove(idc)
+        hl.remove(vc)
+        if 'Artstor Country' in hl:
+            removed=True
+            hl.remove('Artstor Country')
+        hl.sort()
+        if removed:
+            hl.insert(0,'Artstor Country')
+        hl.insert(0,vc)
+        hl.insert(0,idc)
+        return hl
+    elif category=='Classification':
+        hl.remove(idc)
+        hl.remove(vc)
+        if 'Artstor Classification' in hl:
+            removed=True
+            hl.remove('Artstor Classification')
+        hl.sort()
+        if removed:
+            hl.insert(0,'Artstor Classification')
+        hl.insert(0,vc)
+        hl.insert(0,idc)
+        return hl
 
-def write_modified_csv(row,rd,fname,category,counter):
+def write_modified_csv(row,rd,fname,category,counter,vc,idc):
     f_path='/home/ana/faizan/preloader_csvs/converted_csvs/'+'converted-'+fname
     f=open(f_path,'a')
     csv_writer=csv.writer(f,dialect='excel',delimiter=',')
     hl=row.keys()
     if counter==1:
+        #hl=rearrange_columns(hl,vc,idc,category)
         csv_writer.writerow(hl)
     new_row=[]
     if category=='Country':
@@ -361,7 +388,7 @@ def generate_result_csv(data_obj,csv_ref,category):
     csv_writer=csv.writer(f,delimiter=',')
     hl=[]
     if category=='Country':
-        hl=['ID','Status','Artstor Country','Query Term','TGN ID']
+        hl=['ID','Query Term','Logic','Status','Artstor Country','TGN ID']
         csv_writer.writerow(hl)
         for vals in data_obj:
             if vals[1]['status']=='Matched':
@@ -370,15 +397,17 @@ def generate_result_csv(data_obj,csv_ref,category):
                 ac=vals[1]['artstor_country']
                 qt=vals[1]['query_term']
                 tgn_id=vals[1]['tgn_id']
+                logic='An exact match of the term '+ac+' was found in the query term string'
             else:
                 id=vals[0]
                 status=vals[1]['status']
                 ac=''
                 qt=vals[1]['query_term']
                 tgn_id=''
-            csv_writer.writerow([id,status,ac,qt,tgn_id])
+                logic=''
+            csv_writer.writerow([id,qt,logic,status,ac,tgn_id])
     else:
-        hl=['ID','Status','Artstor Classification','Query Term']
+        hl=['ID','Query Term','Logic','Status','Artstor Classification']
         csv_writer.writerow(hl)
         for vals in data_obj:
             if vals[1]['status']=='Matched':
@@ -386,13 +415,15 @@ def generate_result_csv(data_obj,csv_ref,category):
                 status=vals[1]['status']
                 ac=vals[1]['artstor_classification']
                 qt=vals[1]['query_term']
+                logic='The keyword '+qt+' maps directly to the term '+ac
             else:
                 id=vals[0]
                 status=vals[1]['status']
                 ac=''
                 qt=vals[1]['query_term']
+                logic=''
 
-            csv_writer.writerow([id,status,ac,qt])
+            csv_writer.writerow([id,qt,logic,status,ac])
 
 
     # print data_obj[0]
@@ -416,3 +447,4 @@ if __name__ == '__main__':
 else:
     # This branch is for the test suite; you can ignore it.
     cherrypy.tree.mount(preloader_interface(), config=tutconf)
+
