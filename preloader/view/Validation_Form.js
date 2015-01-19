@@ -35,16 +35,18 @@ var upload_form=Ext.create('Ext.form.Panel', {
         vertical: true,
         items: [
             { boxLabel: 'Artstor Country', name: 'category', inputValue: 'Country' , checked: true},
-            { boxLabel: 'Artstor Classification', name: 'category', inputValue: 'Classification'}
+            { boxLabel: 'Artstor Classification', name: 'category', inputValue: 'Classification'},
+			{ boxLabel: 'Artstor Date', name: 'category', inputValue: 'Date'}
             
         ],
         listeners:{
             'change':function(combo, newValue, oldValue, eOpts ){
 
-                if (category=='Country')
-                    category=newValue
-                else
-                    category='Country'
+//                if (category=='Country')
+//                    category=newValue
+//                else
+//                    category='Country'
+                  category=newValue
             }
         }
     },
@@ -169,7 +171,8 @@ Ext.Ajax.request({
 		Ext.getBody().unmask();
         var text = response.responseText;
         data=Ext.decode(text)
-        var statusString=''
+		if (category!='Date'){
+		var statusString=''
         var matched=0;
         var unmatched=0;
         var emptyVals=0;
@@ -183,6 +186,7 @@ Ext.Ajax.request({
                 else if (data['data'][i][1]['status']=='Not Matched'){
                     unmatched+=1;
                 }
+				
             else{
                     emptyVals+=1;
             }
@@ -250,6 +254,49 @@ Ext.Ajax.request({
         }
         // Ext.getCmp('statusArea').setRawValue
         // process server response here
+		}
+		else{
+			var statusString=''
+			var converted=0
+			var exceptions=0;
+	        var emptyVals=0;
+	        var total=data['total']
+			for (var i=0;i<parseInt(data['count']);i++){
+					if (data['data'][i][1]['status']=='Converted'){
+						converted+=1
+					}
+					else if (data['data'][i][1]['status']=='Exception'){
+						exceptions+=1
+					}
+					else{
+						emptyVals+=1
+					}
+				}
+			pct=((converted+exceptions+emptyVals)/total)*100
+            statusString=' Dates Parsed: '+converted+',\n Parsing Exceptions: '+exceptions+'\n Empty Values : '+ emptyVals+',\n Total:'+total+' \n '+pct+'% Complete'
+			var statusArea=Ext.getCmp('statusArea')
+			if (data['code']=='IN-PROGRESS'){
+				
+				statusArea.setFieldStyle('font-weight:normal;color:black;')
+		        statusArea.setRawValue(statusString)
+		        getStatus(csv_ref)
+			}
+			
+			else if (data['code']=='COMPLETED' || data['code']=='QUEUE-EMPTY'){
+				download_url=data['result_file_url']
+		        download_csv_url=data['result_csv_url']
+		        Ext.getCmp('reportDownload').enable()
+		        Ext.getCmp('csvDownload').enable()
+				if (pct==100)
+				statusArea.setFieldStyle('font-weight:bold;color:green;')
+				else
+				statusArea.setFieldStyle('font-weight:bold;color:red;')
+				statusArea.setRawValue(statusString)
+			}
+			
+			
+		}
+        
     }
 });
 }
