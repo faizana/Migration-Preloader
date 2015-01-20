@@ -46,7 +46,7 @@ var upload_form=Ext.create('Ext.form.Panel', {
 //                    category=newValue
 //                else
 //                    category='Country'
-                  category=newValue
+                  category=newValue['category']
             }
         }
     },
