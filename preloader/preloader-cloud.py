@@ -10,6 +10,7 @@ import uuid
 from multiprocessing import Process,Queue
 import HTMLParser
 import Queue as lq
+import traceback
 
 htparser=HTMLParser.HTMLParser()
 active_keys=[]
@@ -262,6 +263,7 @@ class preloader_interface(object):
                     # print qv.strip(),class_term_dict.keys()
                     if qv.strip()!='' and qv.strip().lower() in class_term_dict.keys():
                         result_dict[row[id_column]]['query_term']=' '.join(query_val)
+                        result_dict[row[id_column]]['keyword']=qv.lower()
                         result_dict[row[id_column]]['artstor_classification']=class_term_dict[qv.lower().strip()]['artstor_term']
                         result_dict[row[id_column]]['status']='Matched'
                         sm=1
@@ -297,6 +299,7 @@ class preloader_interface(object):
                         result_dict[row[id_column]]['Latest Date']=ld
                         result_dict[row[id_column]]['Logic']=logic
                     except:
+                        traceback.print_exc(file=sys.stdout)
                         result_dict[row[id_column]]['status']='Exception'
                         result_dict[row[id_column]]['query_term']=query_term
                         result_dict[row[id_column]]['Earliest Date']=''
@@ -315,6 +318,7 @@ class preloader_interface(object):
                     mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c,validate_column,id_column)
                 else:
                     mapping_status[csv_ref]['converted_csv']=False
+                process_queue.put(mapping_status)
 
 
 
@@ -444,7 +448,8 @@ def generate_result_csv(data_obj,csv_ref,category):
                 status=vals[1]['status']
                 ac=vals[1]['artstor_classification']
                 qt=vals[1]['query_term']
-                logic='The keyword '+qt+' maps directly to the term '+ac
+                qv=vals[1]['keyword']
+                logic='The keyword '+qv+' maps directly to the term '+ac
             else:
                 id=vals[0]
                 status=vals[1]['status']
