@@ -35,8 +35,8 @@ var upload_form=Ext.create('Ext.form.Panel', {
         vertical: true,
         items: [
             { boxLabel: 'Artstor Country', name: 'category', inputValue: 'Country' , checked: true},
-            { boxLabel: 'Artstor Classification', name: 'category', inputValue: 'Classification'},
-			{ boxLabel: 'Artstor Date', name: 'category', inputValue: 'Date'}
+            { boxLabel: 'Artstor Classification', name: 'category', inputValue: 'Classification'}
+			//{ boxLabel: 'Artstor Date', name: 'category', inputValue: 'Date'}
             
         ],
         listeners:{
@@ -163,10 +163,10 @@ Ext.DomHelper.append(document.body, {
 
 getStatus=function(csv_ref){
 Ext.Ajax.request({
-    url: '/get_mapping_status/',
-    params: {
-        csv_ref: csv_ref
-    },
+    url: '/get_mapping_status/'+csv_ref,
+//    params: {
+//        csv_ref: csv_ref
+//    },
     success: function(response){
 		Ext.getBody().unmask();
         var text = response.responseText;
