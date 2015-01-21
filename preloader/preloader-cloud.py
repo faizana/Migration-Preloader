@@ -17,7 +17,6 @@ from pyramid.config import Configurator
 from pyramid.response import Response
 from pyramid.view import view_config
 from pyramid.response import FileResponse
-from paste.httpserver import serve
 
 
 htparser=HTMLParser.HTMLParser()
@@ -449,7 +448,7 @@ def write_modified_csv(row,rd,fname,category,counter):
     csv_writer=csv.writer(f,dialect='excel',delimiter=',')
     hl=row.keys()
     if counter==1:
-        hl.sort()
+        # hl.sort()
         # hl=rearrange_columns(hl,vc,idc,category)
         csv_writer.writerow(hl)
     new_row=[]
