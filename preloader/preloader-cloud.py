@@ -194,7 +194,7 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
     if category=='Country':
         geography_map=open(geography_map,'rU')
         geography_map=csv.DictReader(geography_map,delimiter=',',dialect=csv.excel_tab)
-        country_term_dict,country_id_dict=self.generate_country_dict(geography_map)
+        country_term_dict,country_id_dict=generate_country_dict(geography_map)
         c=0
         mapping_status[csv_ref]={}
         for row in csv_dict:
@@ -242,14 +242,14 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
             mapping_status[csv_ref]['result']=result_dict
             mapping_status[csv_ref]['category']=category
             if 'artstor country' in [x.lower().strip() for x in row.keys() if x is not None]:
-                mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c,validate_column)
+                mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c)
             else:
                 mapping_status[csv_ref]['converted_csv']=False
             process_queue.put(mapping_status)
     elif category=='Classification':
         classification_map=open(classification_map,'rU')
         classification_map=csv.DictReader(classification_map,delimiter=',',dialect=csv.excel_tab)
-        class_term_dict=self.generate_class_dict(classification_map)
+        class_term_dict=generate_class_dict(classification_map)
         c=0
         mapping_status[csv_ref]={}
         for row in csv_dict:
@@ -276,7 +276,7 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
             mapping_status[csv_ref]['result']=result_dict
             mapping_status[csv_ref]['category']=category
             if 'artstor classification' in [x.lower().strip() for x in row.keys() if x is not None]:
-                mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c,validate_column,id_column)
+                mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c)
             else:
                 mapping_status[csv_ref]['converted_csv']=False
             process_queue.put(mapping_status)
@@ -313,7 +313,7 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
             mapping_status[csv_ref]['result']=result_dict
             mapping_status[csv_ref]['category']=category
             if 'artstor earliest date' and 'artstor latest date' in [x.lower().strip() for x in row.keys() if x is not None]:
-                mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c,validate_column,id_column)
+                mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c)
             else:
                 mapping_status[csv_ref]['converted_csv']=False
             process_queue.put(mapping_status)
@@ -443,7 +443,7 @@ def generate_class_dict(csv_dict):
 
 
 
-def write_modified_csv(row,rd,fname,category,counter,vc,idc):
+def write_modified_csv(row,rd,fname,category,counter):
     f_path='/home/ana/faizan/preloader_csvs/converted_csvs/'+'converted-'+fname
     f=open(f_path,'a')
     csv_writer=csv.writer(f,dialect='excel',delimiter=',')
