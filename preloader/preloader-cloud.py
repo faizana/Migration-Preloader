@@ -153,6 +153,7 @@ def download_csv(request):
         request=request,
         content_type='text/csv'
         )
+        response.headers['Content-Disposition'] = ("attachment; filename="+os.path.basename(path))
         return response   
 
 def get_total_rows(csv_file):
