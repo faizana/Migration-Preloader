@@ -290,7 +290,10 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
             query_term=str(row[validate_column])
             if query_term.strip()!='':
                 try:
-                    ed,ld,logic=start_date_parse(query_term)
+                    result=start_date_parse(query_term)
+                    ed=result.split(',')[0]
+                    ld=result.split(',')[1]
+                    logic=",".join(result.split(',')[2:])
                     result_dict[row[id_column]]['status']='Converted'
                     result_dict[row[id_column]]['query_term']=query_term
                     result_dict[row[id_column]]['Earliest Date']=ed
