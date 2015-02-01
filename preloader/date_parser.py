@@ -34,7 +34,7 @@ def parse_date(input_string):
     # contains_canadian_format=_contains_canadian_format(date_string)
     # print 'contains_dots_with_year',contains_dots_with_year
     # print is_month_day_year_format,contains_dots_with_year
-    if is_month_day_year_format and contains_dots_with_year==False:
+    if is_month_day_year_format and contains_dots_with_year==False and date_string.find('CENTURY')==-1:
         pip_parser=find_date(date_string)
         logic_string='Simple month_day_year_format detected in '+input_string
         return pip_parser,pip_parser,logic_string
@@ -69,7 +69,7 @@ def parse_date(input_string):
         contains_date_with_words_and_hyp=_contains_date_with_words_and_hyp(date_string)
         contains_epoch_with_hyp=_contains_epoch_with_hyp(date_string)
 
-        print contains_date_with_words_and_hyp,contains_epoch_with_hyp
+        # print contains_date_with_words_and_hyp,contains_epoch_with_hyp
         if contains_s:
             date_string=date_string.replace('S','')
             if date_string.find('-')!=-1:
@@ -98,9 +98,9 @@ def parse_date(input_string):
 
         elif contains_date_with_words_and_hyp:
             if bool(re.search('\D+\d+(-)\d+$',date_string)):
-                ed,ld=start_date_parse(re.sub('[A-Z]+','',date_string))
-                logic_string+='. Date found containing words with "-", applied range logic to convert'
-                return ed,ld,logic_string
+                res=start_date_parse(re.sub('[A-Z]+','',date_string))
+                res+=', Date found containing words with "-", applied range logic to convert'
+                return res
             elif bool(re.search('^\D+\d+(-)\D+\d+$|^\d+(-)\D+\d+$',date_string)):
                 ed=re.sub('\D+','',date_string.split('-')[0])
                 ld=re.sub('\D+','',date_string.split('-')[1])
@@ -114,21 +114,22 @@ def parse_date(input_string):
             return ed,ld,logic_string
         elif contains_epoch_with_hyp:
             year_string=date_string.replace(' ','')
-            print 'here'
+            # print 'here'
             get_exact_string=re.compile(r'[A-Z]+\d+[A-Z][A-Z](CENTURY-)[A-Z]+\d+[A-Z][A-Z](CENTURY)')
             get_exact_string1=re.compile(r'[A-Z]+(-\d+[A-Z][A-Z]CENTURY)|[A-Z]+(-[A-Z]+\d+[A-Z][A-Z]CENTURY)|[A-Z]+(-\d+[A-Z]+\d+[A-Z]+CENTURY)|'
                                          r'([A-Z]+-+)+[A-Z]+\d+\D+CENTURY|\d+(-)\d+AD') #MID-19THCENTURY,MID-TOLATE19THCENTURY
             is_bc_date=re.compile(r'BC-|-BC|BC$')
             if bool(get_exact_string.search((year_string))):
-                ed,ld=start_date_parse(get_exact_string.search(year_string).group().replace('-',','))
-                logic_string+='.Epoch detected within range,parsing to numeric format'
-                return ed,ld,logic_string
+                res=start_date_parse(get_exact_string.search(year_string).group().replace('-',','))
+                res+=', Epoch detected within range,parsing to numeric format'
+                return res
             elif bool(get_exact_string1.search((year_string))):
                 # print year_string
                 exp=re.search('\d+\D+(CENTURY)$|^\d+(-)\d+',year_string)
-                ed,ld=start_date_parse(exp.group())
-                logic_string+='.Epoch detected within range,parsing to numeric format'
-                return ed,ld,logic_string
+                # print start_date_parse(exp.group()),type(start_date_parse(exp.group()))
+                res=start_date_parse(exp.group())
+                res+=', Epoch detected within range,parsing to numeric format'
+                return res
             elif bool(is_bc_date.search(year_string)):
                 bc_ad=crosses_bc_ad_boundary(year_string)
                 if bc_ad:
@@ -267,7 +268,7 @@ def is_range(date_string):
     
 def parse_ranges(date_string):
     """Split date ranges based on: (-,;,and,to)"""
-    print date_string
+    # print date_string
     start, end = re.split('-|;|\sAND\s|\sTO\s', date_string)
     # start=re.sub(r'\D+','',start)
     # end=re.sub(r'\D+','',end)
@@ -287,7 +288,7 @@ def crosses_bc_ad_boundary(date_string):
 
 def _is_month_day_year_format(date_string):
         try:
-            parser.parse(date_string,fuzzy=True)
+            parser.parse(date_string)
             return True
         except:
             return False
@@ -301,7 +302,7 @@ def find_date(string):
     # month = dateString.month
     # day = dateString.day
     # return (year, month, day)
-    print year
+    # print year
     return year
 
 
