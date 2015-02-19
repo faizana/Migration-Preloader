@@ -25,7 +25,7 @@ def parse_date(input_string):
     is_month_day_year_format=_is_month_day_year_format(date_string)
     contains_forward_slash=_contains_forward_slash(date_string)
     # contains_date_with_words_and_hyp=_contains_date_with_words_and_hyp(date_string)
-    year_string = re.sub(r'\d+,\s', '', date_string) # Jan 26, 1960
+    # year_string = re.sub(r'\d+,\s', '', date_string) # Jan 26, 1960
     year_string = re.sub(r'\d.+ QUARTER', '', date_string)
     # contains_epoch_with_hyp=_contains_epoch_with_hyp(year_string)
     contains_complex_epoch=bool(re.search('^.+\d+.+(,).+\d+.+(CENTURY)$',date_string))
@@ -189,24 +189,49 @@ def parse_date(input_string):
             ld=date_string[0][:(len(date_string[0])-len(date_string[1]))]+date_string[1]
         return ed,ld,'"/" found in '+input_string+' converting accordingly'
     elif contains_complex_epoch:
-        years=date_string.split(',')
+        years=re.split(',|-|/',date_string)
+        t_ed=[]
+        t_ld=[]
         epochs=[]
         for y in years:
+            if bool(re.search('BEGINNING|EARLY|MID|LATE|END',y)):
+                edo,ldo,logic=adjust_for_special_words(y)
+                t_ed.append(edo)
+                t_ld.append(ldo)
             epochs.append(re.sub('\D+','',y))
-        ed=(int(epochs[0])-1)*calculate_year_multiplier(years[0]+' CENTURY')
-        ld=(int(epochs[1])-1)*calculate_year_multiplier(years[1])+99
-        logic_string='Complex epoch detected in'+input_string
-        return ed,ld,logic_string
+        if len(t_ed)<2 and len(t_ld)<2:
+            ed=(int(epochs[0])-1)*calculate_year_multiplier(years[0]+' CENTURY')+(100*t_ed[0])
+            ld=(int(epochs[1])-1)*calculate_year_multiplier(years[1])+(100*t_ld[0])
+            logic_string='Complex epoch with '+logic+ ' detected in '+input_string
+        else:
+            ed=(int(epochs[0])-1)*calculate_year_multiplier(years[0]+' CENTURY')+(100*t_ed[0])
+            ld=(int(epochs[1])-1)*calculate_year_multiplier(years[1])+(100*t_ld[-1])
+            logic_string='Complex epoch with multiple special words detected in '+input_string
+        return int(ed),int(ld),logic_string
 
     else:
-
         year = int(re.sub('\D+', '', year_string))
+
+
+
     year *= calculate_year_multiplier(date_string)
     if not is_bc(date_string) and calculate_year_multiplier(date_string) == 100:
-        return adjust_for_quarters(date_string) + year - 100, year - 1
+        check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE|END',date_string))
+        quarter,ls=adjust_for_quarters(date_string)
+        logic_string+=ls+' with Century epoch'
+        if check_for_special_dates:
+            edo,ldo,logic=adjust_for_special_words(date_string)
+            return int((year-100)+(100*edo)),int((year-100)+(100*ldo)),logic_string+' '+logic
+        else:
+            return quarter + year - 100, year - 1,logic_string
     elif is_bc(date_string):
-        year=re.sub('\D+','',date_string)
-        logic_string='BC date found,converting to negative numeric format'
+        if date_string.find('MILLION')==-1 or date_string.find('M')==-1:
+            year=re.sub('\D+','',date_string)
+            logic_string='BC date found,converting to negative numeric format'
+        else:
+            million_digit=re.sub('\D+','',date_string)
+            year=int(million_digit)*1000000
+            logic_string='Million string detected,converting to negative numeric format'
         # print year,date_string
         return int(year) * -1, int(year) * -1,logic_string
     elif is_reverse_chronology(date_string):
@@ -229,6 +254,22 @@ def _contains_epoch_with_hyp(val):
                                        r'\d+(AD|BC)-\d+(AD|BC)')
     # print val, contains_epoch_with_hyp.search(val).group()
     return bool(contains_epoch_with_hyp.search(val))
+
+def adjust_for_special_words(year_s):
+    s_list=dict(BEGINNING='0-0.33',EARLY='0-0.33',MID='0.33-0.67',LATE='0.67-1',END='0.67-1')
+    ted=''
+    tld=''
+    for s in s_list.keys():
+        if year_s.find(s)!=-1:
+            ted=float(s_list[s].split('-')[0])
+            tld=float(s_list[s].split('-')[1])
+            logic_string='Special Word '+s+' found, adjusting to '+s_list[s]+' accordingly'
+    if ted=='':
+        ted=0
+        tld=0.99
+        logic_string=''
+    return ted,tld,logic_string
+
 
 def _contains_dots_with_year(val):
     dots=re.compile(r'\d+[.]\d+[.]\d+|\d+[.]\d+')
@@ -320,13 +361,14 @@ def reduce_string(string):
 
 def adjust_for_quarters(date_string):
     if re.search('2ND\sQUARTER|SECOND QUARTER', date_string):
-        return 25
+
+        return 25,'Quarter keyword found'
     elif re.search('3RD\sQUARTER|THIRD QUARTER', date_string):
-        return 50
+        return 50,'Quarter keyword found'
     elif re.search('4TH\sQUARTER|FOURTH QUARTER', date_string):
-        return 75
+        return 75,'Quarter keyword found'
     else:
-        return 0
+        return 0,''
     
 
 if __name__ == "__main__":
@@ -374,7 +416,8 @@ if __name__ == "__main__":
         "ca. -3000 - ca.",\
         "ca. 1500 - ca. 1600",\
         "ca. -2000 - ca. -1000",\
-        "3 BC - 6 AD"
+        "3 BC - 6 AD",\
+        "Jan 26, 1960"
 
     ]
 
