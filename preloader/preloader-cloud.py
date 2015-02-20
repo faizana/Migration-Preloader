@@ -504,8 +504,14 @@ def return_resp(mapping_status,csv_ref):
     global active_keys
     global result_paths_dict
     data_obj=convert_dict_to_list(mapping_status[csv_ref]['result'])
+
+
     if len(mapping_status[csv_ref]['result'].keys())<global_status[csv_ref]['total_rows']-1:
-        return simplejson.dumps(dict(data=data_obj,count=len(mapping_status[csv_ref]['result'].keys()),total=int(global_status[csv_ref]['total_rows'])-1,code='IN-PROGRESS'))
+        try:
+            return simplejson.dumps(dict(data=data_obj,count=len(mapping_status[csv_ref]['result'].keys()),total=int(global_status[csv_ref]['total_rows'])-1,code='IN-PROGRESS'))
+        except:
+            print data_obj
+            return dict(data=data_obj,count=len(mapping_status[csv_ref]['result'].keys()),total=int(global_status[csv_ref]['total_rows'])-1,code='IN-PROGRESS')
     else:
         result_paths_dict[csv_ref]={}
         active_keys.remove(csv_ref)

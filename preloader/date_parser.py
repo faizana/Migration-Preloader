@@ -120,15 +120,23 @@ def parse_date(input_string):
                                          r'([A-Z]+-+)+[A-Z]+\d+\D+CENTURY|\d+(-)\d+AD') #MID-19THCENTURY,MID-TOLATE19THCENTURY
             is_bc_date=re.compile(r'BC-|-BC|BC$')
             if bool(get_exact_string.search((year_string))):
-                res=start_date_parse(get_exact_string.search(year_string).group().replace('-',','))
-                res+=', Epoch detected within range,parsing to numeric format'
+                check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE|END',year_string))
+                if check_for_special_dates==False:
+                    res=start_date_parse(get_exact_string.search(year_string).group().replace('-',','))
+                else:
+                    res=start_date_parse(year_string.replace('-',','))
+                res+=', Epoch detected within range,parsing to numeric format 1'
                 return res
             elif bool(get_exact_string1.search((year_string))):
                 # print year_string
                 exp=re.search('\d+\D+(CENTURY)$|^\d+(-)\d+',year_string)
                 # print start_date_parse(exp.group()),type(start_date_parse(exp.group()))
-                res=start_date_parse(exp.group())
-                res+=', Epoch detected within range,parsing to numeric format'
+                check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE|END',year_string))
+                if check_for_special_dates==False:
+                    res=start_date_parse(exp.group())
+                else:
+                    res=start_date_parse(year_string.replace('-',','))
+                res+=', Epoch detected within range,parsing to numeric format 2'
                 return res
             elif bool(is_bc_date.search(year_string)):
                 bc_ad=crosses_bc_ad_boundary(year_string)
@@ -219,9 +227,22 @@ def parse_date(input_string):
         check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE|END',date_string))
         quarter,ls=adjust_for_quarters(date_string)
         logic_string+=ls+' with Century epoch'
+
         if check_for_special_dates:
-            edo,ldo,logic=adjust_for_special_words(date_string)
-            return int((year-100)+(100*edo)),int((year-100)+(100*ldo)),logic_string+' '+logic
+            t_ed=[]
+            t_ld=[]
+            years=date_string.split(',')
+            years=[x for x in years if x.strip() is not '']
+            # print check_for_special_dates,date_string,years
+            for y in years:
+                edo,ldo,logic=adjust_for_special_words(y)
+                t_ed.append(edo)
+                t_ld.append(ldo)
+            # print t_ed,t_ld
+            if len(t_ed)<2 and len(t_ld)<2:
+                return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[0])),logic_string+' '+logic
+            else:
+                return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[-1])),logic_string+' '+logic
         else:
             return quarter + year - 100, year - 1,logic_string
     elif is_bc(date_string):
@@ -417,7 +438,8 @@ if __name__ == "__main__":
         "ca. 1500 - ca. 1600",\
         "ca. -2000 - ca. -1000",\
         "3 BC - 6 AD",\
-        "Jan 26, 1960"
+        "Jan 26, 1960",\
+        "mid-3rd century"
 
     ]
 
@@ -431,14 +453,14 @@ def start_date_parse(date_string):
 
 
 
-# for test in tests:
-#     print "input: %s"%test
-#     print "output:", start_date_parse(test)
-#     # try:
-#     #     print "output:", start_date_parse(test)
-#     # except:
-#     #     print "exception"
-#     print ""
+for test in tests:
+    print "input: %s"%test
+    print "output:", start_date_parse(test)
+    # try:
+    #     print "output:", start_date_parse(test)
+    # except:
+    #     print "exception"
+    print ""
 
     
 
