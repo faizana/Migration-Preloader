@@ -213,7 +213,7 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
             result_dict[row[id_column]]={}
             c+=1
             sm=0
-            query_val=row[validate_column].split(',')
+            query_val=re.split(',|\(',row[validate_column])
             # print 'counter',c
             for qv in query_val:
 
@@ -630,6 +630,6 @@ def main():
 
 if __name__ == '__main__':
     app = main()
-    server = make_server('0.0.0.0', 8888, app)
-    print ('Starting up server on http://localhost:8888')
+    server = make_server('0.0.0.0', 8080, app)
+    print ('Starting up server on http://localhost:8080')
     server.serve_forever()
