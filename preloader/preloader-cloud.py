@@ -186,6 +186,16 @@ def generate_country_dict(csv_dict):
     return country_term_dict,country_id_dict
 
 
+
+
+def find_term_match(val,val_arr):
+    found=False
+    for vals in val_arr:
+        if val.find(vals)!=-1:
+            found=vals
+            break
+    return found
+
 def start_validation(conversion_queue,process_queue,csv_ref,category,validate_column,id_column,geography_map,classification_map):
     global_status=conversion_queue.get()
     csv_path=global_status[csv_ref]['csv_path']
@@ -218,18 +228,20 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
                     break
                     # continue
 
-                elif qv.strip()!='' and qv.isdigit()==False and qv.lower().strip() in country_term_dict.keys():
+                elif qv.strip()!='' and qv.isdigit()==False:
+                    term_match=find_term_match(qv.lower().strip(),country_term_dict.keys())
+                    if term_match!=False:
 
-                    result_dict[row[id_column]]['query_term']=' '.join(query_val)
+                        result_dict[row[id_column]]['query_term']=' '.join(query_val)
 
-                    result_dict[row[id_column]]['artstor_country']=country_term_dict[qv.lower().strip()]['artstor_term']
+                        result_dict[row[id_column]]['artstor_country']=country_term_dict[term_match]['artstor_term']
 
-                    result_dict[row[id_column]]['tgn_id']=country_term_dict[qv.lower().strip()]['tgn_id']
+                        result_dict[row[id_column]]['tgn_id']=country_term_dict[term_match]['tgn_id']
 
-                    result_dict[row[id_column]]['status']='Matched'
+                        result_dict[row[id_column]]['status']='Matched'
 
-                    sm=1
-                    break
+                        sm=1
+                        break
                     # continue
 
             if sm==0 and query_val[0]!='':
@@ -261,13 +273,15 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
             query_val=row[validate_column].split(',')
             for qv in query_val:
                 # print qv.strip(),class_term_dict.keys()
-                if qv.strip()!='' and qv.strip().lower() in class_term_dict.keys():
-                    result_dict[row[id_column]]['query_term']=' '.join(query_val)
-                    result_dict[row[id_column]]['keyword']=qv.lower()
-                    result_dict[row[id_column]]['artstor_classification']=class_term_dict[qv.lower().strip()]['artstor_term']
-                    result_dict[row[id_column]]['status']='Matched'
-                    sm=1
-                    break
+                if qv.strip()!='':
+                    term_match=find_term_match(qv.lower().strip(),class_term_dict.keys())
+                    if term_match!=False:
+                        result_dict[row[id_column]]['query_term']=' '.join(query_val)
+                        result_dict[row[id_column]]['keyword']=term_match
+                        result_dict[row[id_column]]['artstor_classification']=class_term_dict[term_match]['artstor_term']
+                        result_dict[row[id_column]]['status']='Matched'
+                        sm=1
+                        break
             if sm==0 and query_val[0]!='':
                 result_dict[row[id_column]]['status']='Not Matched'
                 result_dict[row[id_column]]['query_term']=' '.join(query_val)
@@ -507,11 +521,7 @@ def return_resp(mapping_status,csv_ref):
 
 
     if len(mapping_status[csv_ref]['result'].keys())<global_status[csv_ref]['total_rows']-1:
-        try:
-            return simplejson.dumps(dict(data=data_obj,count=len(mapping_status[csv_ref]['result'].keys()),total=int(global_status[csv_ref]['total_rows'])-1,code='IN-PROGRESS'))
-        except:
-            print data_obj
-            return dict(data=data_obj,count=len(mapping_status[csv_ref]['result'].keys()),total=int(global_status[csv_ref]['total_rows'])-1,code='IN-PROGRESS')
+        return simplejson.dumps(dict(data=data_obj,count=len(mapping_status[csv_ref]['result'].keys()),total=int(global_status[csv_ref]['total_rows'])-1,code='IN-PROGRESS'))
     else:
         result_paths_dict[csv_ref]={}
         active_keys.remove(csv_ref)
