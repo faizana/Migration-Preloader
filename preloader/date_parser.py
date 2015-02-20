@@ -392,56 +392,56 @@ def adjust_for_quarters(date_string):
         return 0,''
     
 
-if __name__ == "__main__":
-    tests = ["2004",\
-        "1920 C.E.",\
-        "19th Century",\
-        "400BC",\
-        "1 million years ago",\
-        "30 years ago",\
-        "3rd quarter of the 18th century",\
-        "1920-25",\
-        "1920-1925",\
-        "1920 to 1965",\
-        "1320-45",\
-        "1926-32",\
-        "unknown, possibly 1st century",\
-        "late 7th century",\
-        "early 8th century",\
-        "late 7th, early 8th century",\
-        "600BC",\
-        "20th century model of 17th century dwelling",\
-        "1926-32",\
-        "ca. 1870, 1892, 1898, 1941",\
-        "Construction began on June 24, 1939 (opening ceremony March 24, 1940)",\
-        "1920s",\
-        "1938/47",\
-        "01 March1912",\
-        "1650-1660",\
-        "1847-48",\
-        "20-May-1918",\
-        "7-8 December 1868",\
-        "19th century",\
-        "01 March 2014",\
-        "600/47",\
-        "1920?",\
-        "late 19th century-early 20th century",\
-        "early to mid 19th century",\
-        "l875-1897",\
-        "mid-to-late 18th century",\
-        "600-700 AD",\
-        "180-145 BC",\
-        "Feb 1916-Sep1917",\
-        "1915-Feb 1916",\
-        "11.12.1868",\
-        "ca. -3000 - ca.",\
-        "ca. 1500 - ca. 1600",\
-        "ca. -2000 - ca. -1000",\
-        "3 BC - 6 AD",\
-        "Jan 26, 1960",\
-        "mid-3rd century"
-
-    ]
+# if __name__ == "__main__":
+#     tests = ["2004",\
+#         "1920 C.E.",\
+#         "19th Century",\
+#         "400BC",\
+#         "1 million years ago",\
+#         "30 years ago",\
+#         "3rd quarter of the 18th century",\
+#         "1920-25",\
+#         "1920-1925",\
+#         "1920 to 1965",\
+#         "1320-45",\
+#         "1926-32",\
+#         "unknown, possibly 1st century",\
+#         "late 7th century",\
+#         "early 8th century",\
+#         "late 7th, early 8th century",\
+#         "600BC",\
+#         "20th century model of 17th century dwelling",\
+#         "1926-32",\
+#         "ca. 1870, 1892, 1898, 1941",\
+#         "Construction began on June 24, 1939 (opening ceremony March 24, 1940)",\
+#         "1920s",\
+#         "1938/47",\
+#         "01 March1912",\
+#         "1650-1660",\
+#         "1847-48",\
+#         "20-May-1918",\
+#         "7-8 December 1868",\
+#         "19th century",\
+#         "01 March 2014",\
+#         "600/47",\
+#         "1920?",\
+#         "late 19th century-early 20th century",\
+#         "early to mid 19th century",\
+#         "l875-1897",\
+#         "mid-to-late 18th century",\
+#         "600-700 AD",\
+#         "180-145 BC",\
+#         "Feb 1916-Sep1917",\
+#         "1915-Feb 1916",\
+#         "11.12.1868",\
+#         "ca. -3000 - ca.",\
+#         "ca. 1500 - ca. 1600",\
+#         "ca. -2000 - ca. -1000",\
+#         "3 BC - 6 AD",\
+#         "Jan 26, 1960",\
+#         "mid-3rd century"
+#
+#     ]
 
 
 def start_date_parse(date_string):
@@ -453,14 +453,14 @@ def start_date_parse(date_string):
 
 
 
-for test in tests:
-    print "input: %s"%test
-    print "output:", start_date_parse(test)
-    # try:
-    #     print "output:", start_date_parse(test)
-    # except:
-    #     print "exception"
-    print ""
+# for test in tests:
+#     print "input: %s"%test
+#     print "output:", start_date_parse(test)
+#     # try:
+#     #     print "output:", start_date_parse(test)
+#     # except:
+#     #     print "exception"
+#     print ""
 
     
 
