@@ -291,15 +291,20 @@ def parse_date(input_string):
                     if len(t_ed)<2 and len(t_ld)<2:
                         return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[0])),logic_string+' '+logic
                     else:
-                        return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[-1])),logic_string+' '+logic
+                        if t_ed[-1]!=0 and t_ld[-1]!=0:
+                            return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[-1])),logic_string+' '+logic
+                        else:
+                            return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[0])),logic_string+' '+logic
                 else:
-                    if ls.find('QUARTER')!=-1:
-                        return quarter + year - 100, year - 1,logic_string
+                    if ls.find('Quarter')!=-1:
+                        return quarter + year - 100, quarter + year - 100+25,logic_string
                     elif ls.find('HALF')!=-1:
                         if quarter==0:
                             return year - 100, year - 50,logic_string
                         else:
                             return quarter+year - 100, year - 1,logic_string
+                    else:
+                        return year - 100, year - 1,logic_string
 
             elif is_bc(date_string):
                 if date_string.find('MILLION')==-1 or date_string.find('M')==-1:
@@ -343,7 +348,7 @@ def adjust_for_special_words(year_s):
             logic_string='Special Word '+s+' found, adjusting to '+s_list[s]+' accordingly'
     if ted=='':
         ted=0
-        tld=0.99
+        tld=0
         logic_string=''
     return ted,tld,logic_string
 
@@ -439,8 +444,8 @@ def reduce_string(string):
 def adjust_for_quarters(date_string):
     date_string=date_string.replace(' ','')
     if re.search('2NDQUARTER|SECONDQUARTER', date_string):
-
         return 25,'Quarter keyword found'
+
     elif re.search('3RDQUARTER|THIRDQUARTER', date_string):
         return 50,'Quarter keyword found'
     elif re.search('4THQUARTER|FOURTHQUARTER', date_string):
