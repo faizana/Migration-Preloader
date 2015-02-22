@@ -13,6 +13,7 @@ import Queue as lq
 import traceback
 import sys
 import re
+import HTMLParser
 
 from wsgiref.simple_server import make_server
 from pyramid.config import Configurator
@@ -21,7 +22,7 @@ from pyramid.view import view_config
 from pyramid.response import FileResponse
 
 
-htparser=HTMLParser.HTMLParser()
+htmlparsetool=HTMLParser.HTMLParser()
 active_keys=[]
 geography_map='controlled_list_map/country.csv'
 classification_map='controlled_list_map/classification.csv'
@@ -213,13 +214,17 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
             result_dict[row[id_column]]={}
             c+=1
             sm=0
-            query_val=re.split(',|\(',row[validate_column])
+            try:
+                row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
+            except:
+                row[validate_column]=row[validate_column].decode('utf-8')
+                row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
             # print 'counter',c
             for qv in query_val:
 
                 # print qv
                 if qv.strip()!='' and qv.isdigit()==True and qv.strip() in country_id_dict.keys():
-                    result_dict[row[id_column]]['query_term']=' '.join(query_val)
+                    result_dict[row[id_column]]['query_term']=row[validate_column]
                     result_dict[row[id_column]]['artstor_country']=country_id_dict[qv]['artstor_term']
                     result_dict[row[id_column]]['tgn_id']=qv
                     result_dict[row[id_column]]['source_term']=country_id_dict[qv]['source_term']
@@ -232,8 +237,7 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
                     term_match=find_term_match(qv.lower().strip(),country_term_dict.keys())
                     if term_match!=False:
 
-                        result_dict[row[id_column]]['query_term']=' '.join(query_val)
-
+                        result_dict[row[id_column]]['query_term']=row[validate_column]
                         result_dict[row[id_column]]['artstor_country']=country_term_dict[term_match]['artstor_term']
 
                         result_dict[row[id_column]]['tgn_id']=country_term_dict[term_match]['tgn_id']
@@ -303,7 +307,12 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
         for row in csv_dict:
             result_dict[row[id_column]]={}
             c+=1
-            query_term=str(row[validate_column])
+            try:
+                query_term=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
+            except:
+                row[validate_column]=row[validate_column].decode('utf-8')
+                query_term=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
+
             if query_term.strip()!='':
                 try:
                     result=start_date_parse(query_term)
