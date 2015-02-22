@@ -6,10 +6,12 @@ from dateutil import parser
 
 
 def remove_syms(date_string):
-    symbols=['?',';','<','>']
+    symbols=['?','<','>','DESIGNED','PRINTED','MADE','ABOUT','MANUFACTURED','SPRING-SUMMER','SPRING','SUMMER','AUTUMN','WINTER']
 
     for sym in symbols:
         date_string=date_string.replace(sym,'')
+    date_string=re.sub('A\.D\.|A\.D','AD',date_string)
+    date_string=re.sub('B\.C\.|B\.C','BC',date_string)
     return date_string
 
 
@@ -28,7 +30,8 @@ def parse_date(input_string):
     # year_string = re.sub(r'\d+,\s', '', date_string) # Jan 26, 1960
     year_string = re.sub(r'\d.+ QUARTER', '', date_string)
     # contains_epoch_with_hyp=_contains_epoch_with_hyp(year_string)
-    contains_complex_epoch=bool(re.search('^.+\d+.+(,).+\d+.+(CENTURY)$',date_string))
+    contains_complex_epoch=bool(re.search('^.+\d+.+(,).+\d+.+(CENTURY)$|^\d+.+(,)\d+.+(CENTURY)$',date_string))
+
     contains_dots_with_year=_contains_dots_with_year(date_string)
     # print 'is_range(year_string)',is_range(year_string),"bool(re.search('\d+S$',date_string))",bool(re.search('\d+S$',date_string))
     # contains_canadian_format=_contains_canadian_format(date_string)
@@ -45,7 +48,9 @@ def parse_date(input_string):
         return parse_ranges(year_string)
     elif is_range(year_string) and bool(re.search('\D+',year_string.replace('-','')))==True:
         # print 'mkc'
-        date_string = input_string.upper().replace(' ','') #remove whitespaces
+        date_string = input_string.upper().replace(' ','')
+        date_string=remove_syms(date_string)
+         #remove whitespaces
         if date_string.find('CA.')!=-1:
             date_string=date_string.replace('CA.','')
             if bool(re.search('(-)\d+(-)',date_string)):
@@ -62,12 +67,26 @@ def parse_date(input_string):
 
 
 
-        date_string=re.sub(r';|AND|TO','-',date_string)
+        date_string=re.sub(r'AND|TO','-',date_string)
         logic_string='alphanumeric range detected in '+input_string
         # print date_string
         contains_s=_ends_with_s(date_string.replace(' ',''))
         contains_date_with_words_and_hyp=_contains_date_with_words_and_hyp(date_string)
         contains_epoch_with_hyp=_contains_epoch_with_hyp(date_string)
+        contains_multiple_ranges=bool(re.search('\d+(-)\d+(,|;)\d+(-)\d+',date_string))
+        print contains_multiple_ranges
+
+
+
+
+        if contains_multiple_ranges:
+            dates=re.split(',|;',date_string)
+            print dates
+            eds=start_date_parse(dates[0])
+            lds=start_date_parse(dates[1])
+            ed=eds.split(',')[0].replace('(','')
+            ld=lds.split(',')[1]
+            return ed,ld,'Multiple ranges detected'
 
         # print contains_date_with_words_and_hyp,contains_epoch_with_hyp
         if contains_s:
@@ -128,16 +147,38 @@ def parse_date(input_string):
                 res+=', Epoch detected within range,parsing to numeric format 1'
                 return res
             elif bool(get_exact_string1.search((year_string))):
-                # print year_string
-                exp=re.search('\d+\D+(CENTURY)$|^\d+(-)\d+',year_string)
-                # print start_date_parse(exp.group()),type(start_date_parse(exp.group()))
-                check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE|END',year_string))
-                if check_for_special_dates==False:
-                    res=start_date_parse(exp.group())
-                else:
-                    res=start_date_parse(year_string.replace('-',','))
-                res+=', Epoch detected within range,parsing to numeric format 2'
-                return res
+
+                    if year_string.find('CENTURY')!=-1:
+                        exp=re.search('\d+\D+(CENTURY)|^\d+(-)\d+|\d+\D+(-)\d+\D+(CENTURY)',year_string)
+                        # print start_date_parse(exp.group()),type(start_date_parse(exp.group()))
+                        check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE|END',year_string))
+                        if check_for_special_dates==False:
+                            if bool(is_bc_date.search(year_string))==False:
+                                res=start_date_parse(exp.group().replace('-',','))
+                            else:
+                                res=start_date_parse(exp.group().replace('-',','))
+                                res=res.split(',')
+                                res[0]=str(int(re.sub('\(|\)','',res[0]))*-1)
+                                if crosses_bc_ad_boundary(year_string)==False:
+
+                                    res[1]=str(int(res[1].replace('(',''))*-1)
+                                res=','.join(res)
+
+
+
+                        else:
+                            res=start_date_parse(year_string.replace('-',','))
+                        res+=', Epoch detected within range,parsing to numeric format 2'
+                        return res
+                    else:
+                        if crosses_bc_ad_boundary(year_string):
+                            exp=year_string.split('-')
+                            ed=int(re.search('\d+',exp[0]).group())*-1
+                            ld=int(re.search('\d+',exp[1]).group())
+                            return ed,ld
+                        res=start_date_parse(re.sub('AD|A.D.','',year_string))
+                        return res
+
             elif bool(is_bc_date.search(year_string)):
                 bc_ad=crosses_bc_ad_boundary(year_string)
                 if bc_ad:
@@ -206,7 +247,12 @@ def parse_date(input_string):
                 edo,ldo,logic=adjust_for_special_words(y)
                 t_ed.append(edo)
                 t_ld.append(ldo)
+            else:
+                t_ed.append(0)
+                t_ld.append(0.99)
+
             epochs.append(re.sub('\D+','',y))
+
         if len(t_ed)<2 and len(t_ld)<2:
             ed=(int(epochs[0])-1)*calculate_year_multiplier(years[0]+' CENTURY')+(100*t_ed[0])
             ld=(int(epochs[1])-1)*calculate_year_multiplier(years[1])+(100*t_ld[0])
@@ -218,47 +264,57 @@ def parse_date(input_string):
         return int(ed),int(ld),logic_string
 
     else:
-        year = int(re.sub('\D+', '', year_string))
-
-
-
-    year *= calculate_year_multiplier(date_string)
-    if not is_bc(date_string) and calculate_year_multiplier(date_string) == 100:
-        check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE|END',date_string))
-        quarter,ls=adjust_for_quarters(date_string)
-        logic_string+=ls+' with Century epoch'
-
-        if check_for_special_dates:
-            t_ed=[]
-            t_ld=[]
-            years=date_string.split(',')
-            years=[x for x in years if x.strip() is not '']
-            # print check_for_special_dates,date_string,years
-            for y in years:
-                edo,ldo,logic=adjust_for_special_words(y)
-                t_ed.append(edo)
-                t_ld.append(ldo)
-            # print t_ed,t_ld
-            if len(t_ed)<2 and len(t_ld)<2:
-                return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[0])),logic_string+' '+logic
-            else:
-                return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[-1])),logic_string+' '+logic
+        year =re.sub('\D+', '', year_string)
+        if len(year)>4:
+            ed=year[0:(len(year)/2)]
+            ld=year[(len(year)/2):]
+            return ed,ld,'Found two different dates,assigning to ed/ld'
         else:
-            return quarter + year - 100, year - 1,logic_string
-    elif is_bc(date_string):
-        if date_string.find('MILLION')==-1 or date_string.find('M')==-1:
-            year=re.sub('\D+','',date_string)
-            logic_string='BC date found,converting to negative numeric format'
-        else:
-            million_digit=re.sub('\D+','',date_string)
-            year=int(million_digit)*1000000
-            logic_string='Million string detected,converting to negative numeric format'
-        # print year,date_string
-        return int(year) * -1, int(year) * -1,logic_string
-    elif is_reverse_chronology(date_string):
-        logic_string='Reverse Chronology format detected, converting to ED/LD'
-        year = datetime.now().year - year
-    return year, year,logic_string
+            year=int(year)
+            year *= calculate_year_multiplier(date_string)
+            if not is_bc(date_string) and calculate_year_multiplier(date_string) == 100:
+                check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE|END',date_string))
+                quarter,ls=adjust_for_quarters(date_string)
+                logic_string+=ls+' with Century epoch'
+
+                if check_for_special_dates:
+                    t_ed=[]
+                    t_ld=[]
+                    years=date_string.split(',')
+                    years=[x for x in years if x.strip() is not '']
+                    # print check_for_special_dates,date_string,years
+                    for y in years:
+                        edo,ldo,logic=adjust_for_special_words(y)
+                        t_ed.append(edo)
+                        t_ld.append(ldo)
+                    # print t_ed,t_ld
+                    if len(t_ed)<2 and len(t_ld)<2:
+                        return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[0])),logic_string+' '+logic
+                    else:
+                        return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[-1])),logic_string+' '+logic
+                else:
+                    if ls.find('QUARTER')!=-1:
+                        return quarter + year - 100, year - 1,logic_string
+                    elif ls.find('HALF')!=-1:
+                        if quarter==0:
+                            return year - 100, year - 50,logic_string
+                        else:
+                            return quarter+year - 100, year - 1,logic_string
+
+            elif is_bc(date_string):
+                if date_string.find('MILLION')==-1 or date_string.find('M')==-1:
+                    year=re.sub('\D+','',date_string)
+                    logic_string='BC date found,converting to negative numeric format'
+                else:
+                    million_digit=re.sub('\D+','',date_string)
+                    year=int(million_digit)*1000000
+                    logic_string='Million string detected,converting to negative numeric format'
+                # print year,date_string
+                return int(year) * -1, int(year) * -1,logic_string
+            elif is_reverse_chronology(date_string):
+                logic_string='Reverse Chronology format detected, converting to ED/LD'
+                year = datetime.now().year - year
+            return year, year,logic_string
 
 def _contains_canadian_format(val):
     val=val.replace(' ','')
@@ -271,7 +327,7 @@ def _contains_epoch_with_hyp(val):
                                        r'[A-Z]+(-[A-Z]+\d+[A-Z][A-Z]CENTURY)|'
                                        r'[A-Z]+(-\d+[A-Z]+\d+[A-Z]+CENTURY)|'
                                        r'([A-Z]+-+)+[A-Z]+\d+\D+CENTURY|'
-                                       r'\d+(-)\d+(AD|BC)|'
+                                       r'\d+(-)\d+(AD|BC|A.D.|B.C.)|'
                                        r'\d+(AD|BC)-\d+(AD|BC)')
     # print val, contains_epoch_with_hyp.search(val).group()
     return bool(contains_epoch_with_hyp.search(val))
@@ -344,7 +400,7 @@ def parse_ranges(date_string):
     
 def crosses_bc_ad_boundary(date_string):
     if is_bc(date_string):
-        if re.search(r'AD|A\.D\.|CE', date_string) is not None:
+        if re.search(r'AD|A\.D\.', date_string) is not None:
             return True
     return False
 
@@ -381,67 +437,81 @@ def reduce_string(string):
     return string[:i + 1]
 
 def adjust_for_quarters(date_string):
-    if re.search('2ND\sQUARTER|SECOND QUARTER', date_string):
+    date_string=date_string.replace(' ','')
+    if re.search('2NDQUARTER|SECONDQUARTER', date_string):
 
         return 25,'Quarter keyword found'
-    elif re.search('3RD\sQUARTER|THIRD QUARTER', date_string):
+    elif re.search('3RDQUARTER|THIRDQUARTER', date_string):
         return 50,'Quarter keyword found'
-    elif re.search('4TH\sQUARTER|FOURTH QUARTER', date_string):
+    elif re.search('4THQUARTER|FOURTHQUARTER', date_string):
         return 75,'Quarter keyword found'
+    elif re.search('1STHALF|FIRSTHALF', date_string):
+        return 0,'HALF keyword found'
+    elif re.search('2NDHALF|SECONGHALF', date_string):
+        return 50,'HALF keyword found'
     else:
         return 0,''
     
 
-# if __name__ == "__main__":
-#     tests = ["2004",\
-#         "1920 C.E.",\
-#         "19th Century",\
-#         "400BC",\
-#         "1 million years ago",\
-#         "30 years ago",\
-#         "3rd quarter of the 18th century",\
-#         "1920-25",\
-#         "1920-1925",\
-#         "1920 to 1965",\
-#         "1320-45",\
-#         "1926-32",\
-#         "unknown, possibly 1st century",\
-#         "late 7th century",\
-#         "early 8th century",\
-#         "late 7th, early 8th century",\
-#         "600BC",\
-#         "20th century model of 17th century dwelling",\
-#         "1926-32",\
-#         "ca. 1870, 1892, 1898, 1941",\
-#         "Construction began on June 24, 1939 (opening ceremony March 24, 1940)",\
-#         "1920s",\
-#         "1938/47",\
-#         "01 March1912",\
-#         "1650-1660",\
-#         "1847-48",\
-#         "20-May-1918",\
-#         "7-8 December 1868",\
-#         "19th century",\
-#         "01 March 2014",\
-#         "600/47",\
-#         "1920?",\
-#         "late 19th century-early 20th century",\
-#         "early to mid 19th century",\
-#         "l875-1897",\
-#         "mid-to-late 18th century",\
-#         "600-700 AD",\
-#         "180-145 BC",\
-#         "Feb 1916-Sep1917",\
-#         "1915-Feb 1916",\
-#         "11.12.1868",\
-#         "ca. -3000 - ca.",\
-#         "ca. 1500 - ca. 1600",\
-#         "ca. -2000 - ca. -1000",\
-#         "3 BC - 6 AD",\
-#         "Jan 26, 1960",\
-#         "mid-3rd century"
-#
-#     ]
+if __name__ == "__main__":
+    tests = ["2004",\
+        "1920 C.E.",\
+        "19th Century",\
+        "400BC",\
+        "1 million years ago",\
+        "30 years ago",\
+        "3rd quarter of the 18th century",\
+        "1920-25",\
+        "1920-1925",\
+        "1920 to 1965",\
+        "1320-45",\
+        "1926-32",\
+        "unknown, possibly 1st century",\
+        "late 7th century",\
+        "early 8th century",\
+        "late 7th, early 8th century",\
+        "600BC",\
+        "20th century model of 17th century dwelling",\
+        "1926-32",\
+        "ca. 1870, 1892, 1898, 1941",\
+        "Construction began on June 24, 1939 (opening ceremony March 24, 1940)",\
+        "1920s",\
+        "1938/47",\
+        "01 March1912",\
+        "1650-1660",\
+        "1847-48",\
+        "20-May-1918",\
+        "7-8 December 1868",\
+        "19th century",\
+        "01 March 2014",\
+        "600/47",\
+        "1920?",\
+        "late 19th century-early 20th century",\
+        "early to mid 19th century",\
+        "l875-1897",\
+        "mid-to-late 18th century",\
+        "600-700 AD",\
+        "180-145 BC",\
+        "Feb 1916-Sep1917",\
+        "1915-Feb 1916",\
+        "11.12.1868",\
+        "ca. -3000 - ca.",\
+        "ca. 1500 - ca. 1600",\
+        "ca. -2000 - ca. -1000",\
+        "3 BC - 6 AD",\
+        "Jan 26, 1960",\
+        "mid-3rd century",\
+        "8th-9th century BC",\
+        "8TH,9THCENTURY",\
+        "A.D. 918-1392",\
+        "1956, printed 1979",\
+        "designed 1951; made 1953",\
+        "designed 1945-46, made 1946-47",\
+        "designed 1948-50; made about 1950-53",\
+        "designed 1951-52; made 1953-about 1960",\
+        "first half of 20th century"
+
+    ]
 
 
 def start_date_parse(date_string):
