@@ -28,8 +28,9 @@ Ext.define('Preloader.view.ArtstorCountry.ListGrid', {
 
         this.columns = [
             {header: 'Source Geography Term',  dataIndex: 'countryName',  flex: 1},
-            {header: 'TGN ID', dataIndex: 'tgn_id', flex: 1},
-            {header: 'Artstor Geography Term', dataIndex: 'region1', flex: 1},
+			{header: 'Artstor Geography Term', dataIndex: 'region1', flex: 1},
+            {header: 'TGN ID', dataIndex: 'tgn_id', flex: 1}
+            
             
         ];
 
