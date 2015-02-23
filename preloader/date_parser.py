@@ -514,7 +514,8 @@ if __name__ == "__main__":
         "designed 1945-46, made 1946-47",\
         "designed 1948-50; made about 1950-53",\
         "designed 1951-52; made 1953-about 1960",\
-        "first half of 20th century"
+        "first half of 20th century",\
+        "5th-3rd century B.C."
 
     ]
 
