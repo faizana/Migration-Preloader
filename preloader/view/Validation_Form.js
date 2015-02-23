@@ -197,11 +197,11 @@ Ext.Ajax.request({
             }
         if (category=='Country'){
 		   pct=((matched+unmatched+emptyVals)/total)*100
-           statusString=' Countries Matched: '+matched+',\n Countries Unmatched: '+unmatched+'\n Empty Values : '+ emptyVals+',\n Total:'+total+' \n '+pct+'% Complete'
+           statusString=' Countries Matched: '+addCommas(matched)+';\n Countries Unmatched: '+addCommas(unmatched)+'\n Empty Source Values : '+ addCommas(emptyVals)+';\n Total Source Values:'+addCommas(total)+' \n '+pct.toFixed(2)+'% Complete'
         }
         else {
             pct=((matched+unmatched+emptyVals)/total)*100
-           statusString=' Classifications Matched: '+matched+',\n Classifications Unmatched: '+unmatched+'\n Empty Values : '+ emptyVals+',\n Total:'+total+' \n '+pct+'% Complete'
+           statusString=' Classifications Matched: '+addCommas(matched)+';\n Classifications Unmatched: '+addCommas(unmatched)+'\n Empty Source Values : '+ addCommas(emptyVals)+';\n Total Source Values:'+addCommas(total)+' \n '+pct.toFixed(2)+'% Complete'
         }
 
         var statusArea=Ext.getCmp('statusArea')
@@ -230,7 +230,7 @@ Ext.Ajax.request({
         if (category=='Country'){
 			
 			pct=((matched+unmatched+emptyVals)/total)*100
-			statusString=' Countries Matched: '+matched+',\n Countries Unmatched: '+unmatched+',\n Empty Values : '+ emptyVals+',\n Total: '+total+' \n '+pct+'% Complete'	
+			statusString=' Countries Matched: '+addCommas(matched)+';\n Countries Unmatched: '+addCommas(unmatched)+';\n Empty Source Values : '+ addCommas(emptyVals)+';\n Total Source Values: '+addCommas(total)+' \n '+pct.toFixed(2)+'% Complete'	
 			
 			
 			
@@ -238,7 +238,7 @@ Ext.Ajax.request({
         }
         else {
 			pct=((matched+unmatched+emptyVals)/total)*100
-			statusString=' Classifications Matched: '+matched+',\n Classifications Unmatched: '+unmatched+',\n Empty Values : '+ emptyVals+',\n Total: '+total+' \n '+pct+'% Complete'
+			statusString=' Classifications Matched: '+addCommas(matched)+';\n Classifications Unmatched: '+addCommas(unmatched)+';\n Empty Source Values : '+ addCommas(emptyVals)+';\n Total Source Values: '+addCommas(total)+' \n '+pct.toFixed(2)+'% Complete'
             
         }
         download_url=data['result_file_url']
@@ -275,7 +275,7 @@ Ext.Ajax.request({
 					}
 				}
 			pct=((converted+exceptions+emptyVals)/total)*100
-            statusString=' Dates Parsed: '+converted+',\n Parsing Exceptions: '+exceptions+'\n Empty Values : '+ emptyVals+',\n Total:'+total+' \n '+pct+'% Complete'
+            statusString=' Dates Parsed: '+addCommas(converted)+';\n Parsing Exceptions: '+addCommas(exceptions)+'\n Empty Source Values : '+ addCommas(emptyVals)+';\n Total Source Values:'+addCommas(total)+' \n '+pct.toFixed(2)+'% Complete'
 			var statusArea=Ext.getCmp('statusArea')
 			if (data['code']=='IN-PROGRESS'){
 				
@@ -309,4 +309,16 @@ var addPanelSwitchButton=function (){
     newDiv.innerHTML='<ul id="switchElem" style="margin-left:20px;margin-top:20px;"> <li><a href="#">Artstor Country</li><li class="on"><a href="#">Artstor Classification</li></ul>'
     document.body.appendChild(newDiv);
 
+}
+
+var addCommas=function (nStr) {
+    nStr += '';
+    x = nStr.split('.');
+    x1 = x[0];
+    x2 = x.length > 1 ? '.' + x[1] : '';
+    var rgx = /(\d+)(\d{3})/;
+    while (rgx.test(x1)) {
+            x1 = x1.replace(rgx, '$1' + ',' + '$2');
+    }
+    return x1 + x2;
 }
