@@ -41,7 +41,7 @@ def get_artstor_country_list(request):
         for row in geo_csv:
             # print type(row['Complete List of Nations'])
             try:
-                json_row.append(dict(countryName=row['Source Geography Term'].decode('utf-8').strip(),tgn_id=row['TGN ID'].decode('utf-8').strip(),region1=row['Artstor Geography Term'].decode('utf-8').strip()))
+                json_row.append(dict(countryName=row['Source Geography Term'].decode('utf-8').strip(),region1=row['Artstor Geography Term'].decode('utf-8').strip(),tgn_id=row['TGN ID'].decode('utf-8').strip()))
             except:
                 print row['Source Geography Term'],row['TGN ID'],row['Artstor Geography Term']
 
@@ -56,7 +56,7 @@ def get_artstor_class_list(request):
         for row in class_csv:
             # print type(row['Complete List of Nations'])
             try:
-                json_row.append(dict(countryName=row['Keyword'].decode('utf-8').strip(),tgn_id=row['Artstor Classification Term'].decode('utf-8').strip(),region1=row['AAT ID'].decode('utf-8').strip()))
+                json_row.append(dict(countryName=row['Keyword'].decode('utf-8').strip(),region1=row['Artstor Classification Term'].decode('utf-8').strip(),tgn_id=row['AAT ID'].decode('utf-8').strip()))
             except:
                 print row['Keyword'],row['TGN ID'],row['Artstor Classification Term']
 
@@ -316,8 +316,8 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
             if query_term.strip()!='':
                 try:
                     result=start_date_parse(query_term)
-                    ed=re.sub('\(|\)','',result.split(',')[0])
-                    ld=re.sub('\(|\)','',result.split(',')[1])
+                    ed=re.sub('\(|\)|\'','',result.split(',')[0])
+                    ld=re.sub('\(|\)|\'','',result.split(',')[1])
                     logic=",".join(result.split(',')[2:])
                     result_dict[row[id_column]]['status']='Converted'
                     result_dict[row[id_column]]['query_term']=query_term
