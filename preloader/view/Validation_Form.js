@@ -5,9 +5,9 @@ var upload_form=Ext.create('Ext.form.Panel', {
     title: 'Preloader',
     bodyPadding: 5,
     width:600,
-	height:300,
+	height:320,
     x:200,
-    y:320,
+    y:300,
 
     // The form will submit an AJAX request to this URL when submitted
     url: '/upload_csv/',
