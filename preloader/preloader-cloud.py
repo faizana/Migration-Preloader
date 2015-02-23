@@ -559,7 +559,7 @@ def generate_result_csv(data_obj,csv_ref,category):
                 ac=vals[1]['artstor_country']
                 qt=vals[1]['query_term']
                 tgn_id=vals[1]['tgn_id']
-                logic='An exact match of the term '+ac+' was found in the query term string'
+                logic='An exact match of the term "'+ac+'" was found in the query term string'
             else:
                 id=vals[0]
                 status=vals[1]['status']
@@ -578,7 +578,7 @@ def generate_result_csv(data_obj,csv_ref,category):
                 ac=vals[1]['artstor_classification']
                 qt=vals[1]['query_term']
                 qv=vals[1]['keyword']
-                logic='The keyword '+qv+' maps directly to the term '+ac
+                logic='The keyword "'+qv+'" maps directly to the term "'+ac+'"'
             else:
                 id=vals[0]
                 status=vals[1]['status']
