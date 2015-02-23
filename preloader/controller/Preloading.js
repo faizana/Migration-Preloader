@@ -58,8 +58,8 @@ Ext.define('Preloader.controller.Preloading', {
         })
         this.getArtstorCountryListStoreStore().load()
        Ext.getCmp('countryGrid').columns[0].setText('Source Geography Term')
-       Ext.getCmp('countryGrid').columns[1].setText('TGN ID')
-       Ext.getCmp('countryGrid').columns[2].setText('Artstor Geography Term')
+       Ext.getCmp('countryGrid').columns[1].setText('Artstor Geography Term')
+       Ext.getCmp('countryGrid').columns[2].setText('TGN ID')
 
     }
     
