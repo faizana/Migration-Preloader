@@ -316,8 +316,8 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
             if query_term.strip()!='':
                 try:
                     result=start_date_parse(query_term)
-                    ed=re.sub('\D+','',result.split(',')[0])
-                    ld=re.sub('\D+','',result.split(',')[1])
+                    ed=re.sub('\(|\)','',result.split(',')[0])
+                    ld=re.sub('\(|\)','',result.split(',')[1])
                     logic=",".join(result.split(',')[2:])
                     result_dict[row[id_column]]['status']='Converted'
                     result_dict[row[id_column]]['query_term']=query_term
