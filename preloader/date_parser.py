@@ -144,7 +144,8 @@ def parse_date(input_string):
                     res=start_date_parse(get_exact_string.search(year_string).group().replace('-',','))
                 else:
                     res=start_date_parse(year_string.replace('-',','))
-                res+=', Epoch detected within range,parsing to numeric format 1'
+                    res+='Special word '+re.search('BEGINNING|EARLY|MID|LATE|END',year_string).group()+' found in string.'
+                res+=', Ranged epoch with multiple "CENTURY" keywords detected , parsing according to range rules'
                 return res
             elif bool(get_exact_string1.search((year_string))):
 
@@ -168,7 +169,8 @@ def parse_date(input_string):
 
                         else:
                             res=start_date_parse(year_string.replace('-',','))
-                        res+=', Epoch detected within range,parsing to numeric format 2'
+                            res+='Special word '+re.search('BEGINNING|EARLY|MID|LATE|END',year_string).group()+' found in string.'
+                        res+=', Ranged epoch with  "CENTURY" keyword detected , parsing according to range rules'
                         return res
                     else:
                         if crosses_bc_ad_boundary(year_string):
@@ -260,7 +262,7 @@ def parse_date(input_string):
         else:
             ed=(int(epochs[0])-1)*calculate_year_multiplier(years[0]+' CENTURY')+(100*t_ed[0])
             ld=(int(epochs[1])-1)*calculate_year_multiplier(years[1])+(100*t_ld[-1])
-            logic_string='Complex epoch with multiple special words detected in '+input_string
+            logic_string='Century epoch found with range in '+input_string+'. Parsing to range.'
         return int(ed),int(ld),logic_string
 
     else:
@@ -275,7 +277,7 @@ def parse_date(input_string):
             if not is_bc(date_string) and calculate_year_multiplier(date_string) == 100:
                 check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE|END',date_string))
                 quarter,ls=adjust_for_quarters(date_string)
-                logic_string+=ls+' with Century epoch'
+                logic_string+=ls+' Simple epoch detected in '+year_string
 
                 if check_for_special_dates:
                     t_ed=[]

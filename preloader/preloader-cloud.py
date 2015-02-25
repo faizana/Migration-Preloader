@@ -319,6 +319,7 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
                     ed=re.sub('\(|\)|\'','',result.split(',')[0])
                     ld=re.sub('\(|\)|\'','',result.split(',')[1])
                     logic=",".join(result.split(',')[2:])
+                    logic=re.sub("'|\(|\)",'',logic)
                     result_dict[row[id_column]]['status']='Converted'
                     result_dict[row[id_column]]['query_term']=query_term
                     result_dict[row[id_column]]['Earliest Date']=ed
