@@ -217,7 +217,7 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
             try:
                 row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
             except:
-                row[validate_column]=row[validate_column].decode('utf-8')
+                row[validate_column]=row[validate_column].decode('latin-1')
                 row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
             query_val=row[validate_column].split(',')
             for qv in query_val:
