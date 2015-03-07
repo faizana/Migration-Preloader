@@ -74,14 +74,12 @@ def parse_date(input_string):
         contains_date_with_words_and_hyp=_contains_date_with_words_and_hyp(date_string)
         contains_epoch_with_hyp=_contains_epoch_with_hyp(date_string)
         contains_multiple_ranges=bool(re.search('\d+(-)\d+(,|;)\d+(-)\d+',date_string))
-        print contains_multiple_ranges
 
 
 
 
         if contains_multiple_ranges:
             dates=re.split(',|;',date_string)
-            print dates
             eds=start_date_parse(dates[0])
             lds=start_date_parse(dates[1])
             ed=eds.split(',')[0].replace('(','')
@@ -159,11 +157,22 @@ def parse_date(input_string):
                             else:
                                 res=start_date_parse(exp.group().replace('-',','))
                                 res=res.split(',')
-                                res[0]=str(int(re.sub('\(|\)','',res[0]))*-1)
-                                if crosses_bc_ad_boundary(year_string)==False:
+                                ed=int(re.sub('\(|\)','',res[0]))
+                                ld=int(res[1].replace('(',''))
 
-                                    res[1]=str(int(res[1].replace('(',''))*-1)
-                                res=','.join(res)
+                                if  ed>ld:
+                                    res[0]=str(int(re.sub('\(|\)','',res[0]))*-1-99)
+                                    if crosses_bc_ad_boundary(year_string)==False:
+
+                                        res[1]=str(int(res[1].replace('(',''))*-1+99)
+                                    res=','.join(res)
+                                else:
+
+                                    res[0]=str(ld*-1)
+                                    if crosses_bc_ad_boundary(year_string)==False:
+
+                                        res[1]=str(ed*-1)
+                                    res=','.join(res)
 
 
 
@@ -199,7 +208,11 @@ def parse_date(input_string):
 
         else:
             # logic_string='No specific range format detected, applying simple range parser'
-            return parse_ranges(date_string)
+
+            try:
+                return parse_ranges(date_string)
+            except:
+                return out_of_the_box_cases(date_string)
 
     elif contains_dots_with_year:
         logic_string='Date with dots detected,parsing to numeric format'
@@ -266,16 +279,18 @@ def parse_date(input_string):
         return int(ed),int(ld),logic_string
 
     else:
-        year =re.sub('\D+', '', year_string)
+        year =re.sub('\D+', '', date_string)
         if len(year)>4:
-            ed=year[0:(len(year)/2)]
-            ld=year[(len(year)/2):]
-            return ed,ld,'Found two different dates,assigning to ed/ld'
+            return out_of_the_box_cases(date_string)
+            # ed=year[0:(len(year)/2)]
+            # ld=year[(len(year)/2):]
+            # return ed,ld,'Found two different dates,assigning to ed/ld'
+
         else:
             year=int(year)
             year *= calculate_year_multiplier(date_string)
             if not is_bc(date_string) and calculate_year_multiplier(date_string) == 100:
-                check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE|END',date_string))
+                check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE[^R]|END',date_string))
                 quarter,ls=adjust_for_quarters(date_string)
                 logic_string+=ls+' Simple epoch detected in '+year_string
 
@@ -379,7 +394,7 @@ def is_reverse_chronology(date_string):
 
 def calculate_year_multiplier(date_string):
     million = re.search('MILLION|M\.', date_string)
-    century = re.search('CENT$| C. $| C $|C$|CENTURY$', date_string)
+    century = re.search('CENT$| C. $| C $|C$|CENTURY', date_string)
     if million:
         return 1000000
     elif century:
@@ -458,6 +473,51 @@ def adjust_for_quarters(date_string):
         return 50,'HALF keyword found'
     else:
         return 0,''
+
+
+def remove_string_elems(string):
+    string=string.split(',')
+    string[0]=re.sub('\D+','',string[0])
+    string[1]=re.sub('\D+','',string[1])
+    return string[0],string[1]
+
+
+def out_of_the_box_cases(date_string):
+    date_string=date_string.replace(' ','')
+    accept_list=['EARLY','MID','LATE','BEGINNING','END','STCENTURY','NDCENTURY','THCENTURY']
+    components=re.split(';|,|\.',date_string)
+    date_vals=[]
+    for comp in components:
+        comp_string=''
+        for words in accept_list:
+            if comp.find(words)!=-1:
+                comp_string=re.sub('\D+','',comp)
+                comp_string+=words
+        if comp_string!='':
+            comp_string=start_date_parse(comp_string)
+            ed,ld=remove_string_elems(comp_string)
+            date_vals.append(int(ed))
+            date_vals.append(int(ld))
+        else:
+            if(bool(re.search('\d+',comp))):
+                comp=re.sub('\D+','',comp)
+                comp_string=start_date_parse(comp)
+                ed,ld=remove_string_elems(comp_string)
+                date_vals.append(int(ed))
+                date_vals.append(int(ld))
+
+
+
+    # print date_vals
+    ed=sorted(date_vals)[0]
+    ld=sorted(date_vals)[-1]
+    return ed,ld,'Multiple dates found,selecting lowest and highest values for ed/ld'
+
+
+
+
+
+
     
 
 if __name__ == "__main__":
@@ -467,7 +527,6 @@ if __name__ == "__main__":
         "400BC",\
         "1 million years ago",\
         "30 years ago",\
-        "3rd quarter of the 18th century",\
         "1920-25",\
         "1920-1925",\
         "1920 to 1965",\
@@ -481,7 +540,7 @@ if __name__ == "__main__":
         "20th century model of 17th century dwelling",\
         "1926-32",\
         "ca. 1870, 1892, 1898, 1941",\
-        "Construction began on June 24, 1939 (opening ceremony March 24, 1940)",\
+        # "Construction began on June 24, 1939 (opening ceremony March 24, 1940)",\
         "1920s",\
         "1938/47",\
         "01 March1912",\
@@ -509,7 +568,7 @@ if __name__ == "__main__":
         "Jan 26, 1960",\
         "mid-3rd century",\
         "8th-9th century BC",\
-        "8TH,9THCENTURY",\
+        "9TH,8THCENTURY",\
         "A.D. 918-1392",\
         "1956, printed 1979",\
         "designed 1951; made 1953",\
@@ -517,7 +576,12 @@ if __name__ == "__main__":
         "designed 1948-50; made about 1950-53",\
         "designed 1951-52; made 1953-about 1960",\
         "first half of 20th century",\
-        "5th-3rd century B.C."
+        "5th-3rd century B.C.",\
+        "Monastery founded in 1153; Church completed in 1252; Gothic cloisters built in the late 13th century.",\
+        "Church built in the 1701; Chapel of Memory from the 15th century",\
+        "Originally construction in the 16th century. Various works added later.",\
+        # "3rd quarter of the 18th century",\
+        # "Original construction in the 13th or 14th century; Damaged in the 17th century and rebuilt in the last quarter of the 17th century."
 
     ]
 
