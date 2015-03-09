@@ -1,5 +1,6 @@
 import re
 from datetime import *
+import csv
 # # from dateutil import *
 # from dateutil.tz import *
 from dateutil import parser
@@ -97,6 +98,9 @@ def parse_date(input_string):
                 for c in range(z_count):
                     trailing_n+='9'
                 ld=date_string[1][:-z_count]+trailing_n
+                if len(ld)!=len(ed):
+                    diff=len(ed)-len(ld)
+                    ld=ed[:diff]+ld
                 logic_string+='. "s" found appended to year, converted to range accordingly'
                 return ed,ld,logic_string
 
@@ -208,11 +212,7 @@ def parse_date(input_string):
 
         else:
             # logic_string='No specific range format detected, applying simple range parser'
-
-            try:
-                return parse_ranges(date_string)
-            except:
-                return out_of_the_box_cases(date_string)
+            return parse_ranges(date_string)
 
     elif contains_dots_with_year:
         logic_string='Date with dots detected,parsing to numeric format'
@@ -279,18 +279,16 @@ def parse_date(input_string):
         return int(ed),int(ld),logic_string
 
     else:
-        year =re.sub('\D+', '', date_string)
+        year =re.sub('\D+', '', year_string)
         if len(year)>4:
-            return out_of_the_box_cases(date_string)
-            # ed=year[0:(len(year)/2)]
-            # ld=year[(len(year)/2):]
-            # return ed,ld,'Found two different dates,assigning to ed/ld'
-
+            ed=year[0:(len(year)/2)]
+            ld=year[(len(year)/2):]
+            return ed,ld,'Found two different dates,assigning to ed/ld'
         else:
             year=int(year)
             year *= calculate_year_multiplier(date_string)
             if not is_bc(date_string) and calculate_year_multiplier(date_string) == 100:
-                check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE[^R]|END',date_string))
+                check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE|END',date_string))
                 quarter,ls=adjust_for_quarters(date_string)
                 logic_string+=ls+' Simple epoch detected in '+year_string
 
@@ -394,7 +392,7 @@ def is_reverse_chronology(date_string):
 
 def calculate_year_multiplier(date_string):
     million = re.search('MILLION|M\.', date_string)
-    century = re.search('CENT$| C. $| C $|C$|CENTURY', date_string)
+    century = re.search('CENT$| C. $| C $|C$|CENTURY$', date_string)
     if million:
         return 1000000
     elif century:
@@ -419,7 +417,7 @@ def parse_ranges(date_string):
         end = (int(start[:2]) * 100) + int(end)
 
     return int(start), int(end),'Numeric year range detected in '+date_string
-    
+
 def crosses_bc_ad_boundary(date_string):
     if is_bc(date_string):
         if re.search(r'AD|A\.D\.', date_string) is not None:
@@ -518,7 +516,7 @@ def out_of_the_box_cases(date_string):
 
 
 
-    
+
 
 if __name__ == "__main__":
     tests = ["2004",\
@@ -577,9 +575,7 @@ if __name__ == "__main__":
         "designed 1951-52; made 1953-about 1960",\
         "first half of 20th century",\
         "5th-3rd century B.C.",\
-        "Monastery founded in 1153; Church completed in 1252; Gothic cloisters built in the late 13th century.",\
-        "Church built in the 1701; Chapel of Memory from the 15th century",\
-        "Originally construction in the 16th century. Various works added later.",\
+        "1860s-70s"
         # "3rd quarter of the 18th century",\
         # "Original construction in the 13th or 14th century; Damaged in the 17th century and rebuilt in the last quarter of the 17th century."
 
@@ -594,6 +590,30 @@ def start_date_parse(date_string):
 
 
 
+f=open('/Users/naveed/Documents/Preloader demo/MFABostonAddl_L02_PL20120204_enhanced_legal_qc.csv','rU')
+fr=open('/Users/naveed/Documents/Preloader demo/MFABostonAddl_L02_PL20120204_enhanced_legal_qc-test.csv','a')
+csv_reader=csv.DictReader(f,delimiter=',')
+csv_writer=csv.writer(fr,delimiter=',')
+i=0
+all_forms=[]
+for row in csv_reader:
+    new_row=[]
+    i+=1
+    print i
+    if row['Object Date'].strip()!='':
+        print "input: %s"%row['Object Date']
+        if row['Object Date'] not in all_forms:
+            all_forms.append(row['Object Date'])
+            new_row.append(row['Object Date'])
+            try:
+                print "output:",start_date_parse(row['Object Date'])
+                new_row.append(start_date_parse(row['Object Date']))
+            except:
+                 print "exception!"
+                 new_row.append('exception')
+            print ""
+            csv_writer.writerow(new_row)
+
 
 # for test in tests:
 #     print "input: %s"%test
@@ -604,38 +624,38 @@ def start_date_parse(date_string):
 #     #     print "exception"
 #     print ""
 
-    
+
 
 
 """
 Comments
 
-UUID: 224a1895-050c-4ae4-9ec6-0927b4bf89b5; SSID: 4902416 
-Date=20th century model of 17th century dwelling 
-Earliest Date=null 
-Latest Date=null. 
+UUID: 224a1895-050c-4ae4-9ec6-0927b4bf89b5; SSID: 4902416
+Date=20th century model of 17th century dwelling
+Earliest Date=null
+Latest Date=null.
 
-They are migrated to SS IMATA as below: 
-Date=20th century model of 17th century dwelling 
+They are migrated to SS IMATA as below:
+Date=20th century model of 17th century dwelling
 Earliest Date=2017 (1600)
 Latest Date=2017  (1699)
 
-UUID: a1354011-f67c-458c-b196-7587efc20b3d; SSID: 4884003 
-Date=ca. 1870, 1892, 1898, 1941 
-Earliest Date=null 
-Latest Date=null. 
+UUID: a1354011-f67c-458c-b196-7587efc20b3d; SSID: 4884003
+Date=ca. 1870, 1892, 1898, 1941
+Earliest Date=null
+Latest Date=null.
 
-They are migrated to SS IMATA as below: 
-Date=ca. 1870, 1892, 1898, 1941 
+They are migrated to SS IMATA as below:
+Date=ca. 1870, 1892, 1898, 1941
 Earliest Date=1870189218981941 (1870)
 Latest Date=1870189218981941  (1941)
 
-UUID: ad53d2bb-8e82-44da-a9ed-ccc4f1cf5943; SSID: 4904579 
-Date=Construction began on June 24, 1939 (opening ceremony March 24, 1940) 
-Earliest Date=null 
-Latest Date=null. 
+UUID: ad53d2bb-8e82-44da-a9ed-ccc4f1cf5943; SSID: 4904579
+Date=Construction began on June 24, 1939 (opening ceremony March 24, 1940)
+Earliest Date=null
+Latest Date=null.
 
-They are migrated to SS IMATA as below: 
-Date=Construction began on June 24, 1939 (opening ceremony March 24, 1940) 
+They are migrated to SS IMATA as below:
+Date=Construction began on June 24, 1939 (opening ceremony March 24, 1940)
 Earliest Date=241939241940 (1939)
 Latest Date=241939241940 (1940)"""
