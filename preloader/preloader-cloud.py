@@ -503,9 +503,9 @@ def write_modified_csv(row,rd,fname,category,counter):
                 new_row.append(row[heads])
     elif category=='Date':
         for heads in hl:
-            if heads.lower().strip()=='earliest date' and 'Earliest Date' in rd.keys():
+            if heads.lower().strip()=='artstor earliest date' and 'Earliest Date' in rd.keys():
                 new_row.append(rd['Earliest Date'])
-            elif heads.lower().strip()=='latest date' and 'Latest Date' in rd.keys():
+            elif heads.lower().strip()=='artstor latest date' and 'Latest Date' in rd.keys():
                 new_row.append(rd['Latest Date'])
             else:
                 new_row.append(row[heads])
