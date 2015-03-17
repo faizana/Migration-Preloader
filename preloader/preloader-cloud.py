@@ -613,7 +613,7 @@ def generate_result_csv(data_obj,csv_ref,category):
                 ed=''
                 ld=''
                 qt=vals[1]['query_term']
-                logic=''
+                logic=vals[1]['Logic']
             csv_writer.writerow([id,qt,logic,status,ed,ld])
 
 
