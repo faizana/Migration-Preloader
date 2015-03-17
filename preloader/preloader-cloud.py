@@ -310,7 +310,7 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
             try:
                 query_term=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
             except:
-                row[validate_column]=row[validate_column].decode('utf-8')
+                row[validate_column]=row[validate_column].decode('latin-1')
                 query_term=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
 
             if query_term.strip()!='':
@@ -320,11 +320,18 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
                     ld=re.sub('\(|\)|\'','',result.split(',')[1])
                     logic=",".join(result.split(',')[2:])
                     logic=re.sub("'|\(|\)",'',logic)
-                    result_dict[row[id_column]]['status']='Converted'
-                    result_dict[row[id_column]]['query_term']=query_term
-                    result_dict[row[id_column]]['Earliest Date']=ed
-                    result_dict[row[id_column]]['Latest Date']=ld
-                    result_dict[row[id_column]]['Logic']=logic
+                    if ed!='' and ld!='':
+                        result_dict[row[id_column]]['status']='Converted'
+                        result_dict[row[id_column]]['query_term']=query_term
+                        result_dict[row[id_column]]['Earliest Date']=ed
+                        result_dict[row[id_column]]['Latest Date']=ld
+                        result_dict[row[id_column]]['Logic']=logic
+                    else:
+                        result_dict[row[id_column]]['status']='Exception'
+                        result_dict[row[id_column]]['query_term']=query_term
+                        result_dict[row[id_column]]['Earliest Date']=ed
+                        result_dict[row[id_column]]['Latest Date']=ld
+                        result_dict[row[id_column]]['Logic']=logic
                 except:
                     traceback.print_exc(file=sys.stdout)
                     result_dict[row[id_column]]['status']='Exception'
@@ -477,6 +484,7 @@ def write_modified_csv(row,rd,fname,category,counter):
     f=open(f_path,'a')
     csv_writer=csv.writer(f,dialect='excel',delimiter=',')
     hl=row.keys()
+    hl=sorted(hl)
     if counter==1:
         # hl.sort()
         # hl=rearrange_columns(hl,vc,idc,category)
