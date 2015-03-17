@@ -16,6 +16,13 @@ def remove_syms(date_string):
     return date_string
 
 
+def detect_month_year_conflict(date_string):
+    splits=re.split('-|/|\.',date_string)
+    if len(re.search('\d+',splits[0]).group())!=len(re.search('\d+',splits[-1]).group()):
+        return True
+    else:
+        return False
+
 def parse_date(input_string):
     # date_string = input_string.upper().replace(' ','') #remove whitespaces
     date_string = input_string.upper()
@@ -39,9 +46,14 @@ def parse_date(input_string):
     # print 'contains_dots_with_year',contains_dots_with_year
     # print is_month_day_year_format,contains_dots_with_year
     if is_month_day_year_format and contains_dots_with_year==False and date_string.find('CENTURY')==-1:
-        pip_parser=find_date(date_string)
-        logic_string='Simple month_day_year_format detected in '+input_string
-        return pip_parser,pip_parser,logic_string
+        conflict=detect_month_year_conflict(date_string)
+        if conflict==False:
+            pip_parser=find_date(date_string)
+            logic_string='Simple month_day_year_format detected in '+input_string
+            return pip_parser,pip_parser,logic_string
+        else:
+            logic_string='Unclear Format detected in '+input_string
+            return '','',logic_string
 
         #
     elif is_range(year_string) and bool(re.search('\D+',year_string.replace('-','')))==False: #and contains_epoch_with_hyp==False and year_string.count('-')<2 and contains_date_with_words_and_hyp==False and contains_s==False:
@@ -125,6 +137,11 @@ def parse_date(input_string):
             elif bool(re.search('^\D+\d+(-)\D+\d+$|^\d+(-)\D+\d+$',date_string)):
                 ed=re.sub('\D+','',date_string.split('-')[0])
                 ld=re.sub('\D+','',date_string.split('-')[1])
+                logic_string+='. Date found containing words with "-", applied range logic to convert'
+                return ed,ld,logic_string
+            elif bool(re.search('^\D+\d+\D+\d+(-)\D+\d+\D+\d+$',date_string)):
+                ed=remove_string_elems(start_date_parse(input_string.split('-')[0]))[0]
+                ld=remove_string_elems(start_date_parse(input_string.split('-')[1]))[0]
                 logic_string+='. Date found containing words with "-", applied range logic to convert'
                 return ed,ld,logic_string
 
@@ -353,7 +370,7 @@ def _contains_epoch_with_hyp(val):
     return bool(contains_epoch_with_hyp.search(val))
 
 def adjust_for_special_words(year_s):
-    s_list=dict(BEGINNING='0-0.33',EARLY='0-0.33',MID='0.33-0.67',LATE='0.67-1',END='0.67-1')
+    s_list=dict(BEGINNING='0-0.33',EARLY='0-0.33',MID='0.33-0.67',LATE='0.67-0.99',END='0.67-0.99')
     ted=''
     tld=''
     for s in s_list.keys():
@@ -518,68 +535,71 @@ def out_of_the_box_cases(date_string):
 
 
 
-if __name__ == "__main__":
-    tests = ["2004",\
-        "1920 C.E.",\
-        "19th Century",\
-        "400BC",\
-        "1 million years ago",\
-        "30 years ago",\
-        "1920-25",\
-        "1920-1925",\
-        "1920 to 1965",\
-        "1320-45",\
-        "1926-32",\
-        "unknown, possibly 1st century",\
-        "late 7th century",\
-        "early 8th century",\
-        "late 7th, early 8th century",\
-        "600BC",\
-        "20th century model of 17th century dwelling",\
-        "1926-32",\
-        "ca. 1870, 1892, 1898, 1941",\
-        # "Construction began on June 24, 1939 (opening ceremony March 24, 1940)",\
-        "1920s",\
-        "1938/47",\
-        "01 March1912",\
-        "1650-1660",\
-        "1847-48",\
-        "20-May-1918",\
-        "7-8 December 1868",\
-        "19th century",\
-        "01 March 2014",\
-        "600/47",\
-        "1920?",\
-        "late 19th century-early 20th century",\
-        "early to mid 19th century",\
-        "l875-1897",\
-        "mid-to-late 18th century",\
-        "600-700 AD",\
-        "180-145 BC",\
-        "Feb 1916-Sep1917",\
-        "1915-Feb 1916",\
-        "11.12.1868",\
-        "ca. -3000 - ca.",\
-        "ca. 1500 - ca. 1600",\
-        "ca. -2000 - ca. -1000",\
-        "3 BC - 6 AD",\
-        "Jan 26, 1960",\
-        "mid-3rd century",\
-        "8th-9th century BC",\
-        "9TH,8THCENTURY",\
-        "A.D. 918-1392",\
-        "1956, printed 1979",\
-        "designed 1951; made 1953",\
-        "designed 1945-46, made 1946-47",\
-        "designed 1948-50; made about 1950-53",\
-        "designed 1951-52; made 1953-about 1960",\
-        "first half of 20th century",\
-        "5th-3rd century B.C.",\
-        "1860s-70s"
-        # "3rd quarter of the 18th century",\
-        # "Original construction in the 13th or 14th century; Damaged in the 17th century and rebuilt in the last quarter of the 17th century."
-
-    ]
+# if __name__ == "__main__":
+#     tests = ["2004",\
+#         "1920 C.E.",\
+#         "19th Century",\
+#         "400BC",\
+#         "1 million years ago",\
+#         "30 years ago",\
+#         "1920-25",\
+#         "1920-1925",\
+#         "1920 to 1965",\
+#         "1320-45",\
+#         "1926-32",\
+#         "unknown, possibly 1st century",\
+#         "late 7th century",\
+#         "early 8th century",\
+#         "late 7th, early 8th century",\
+#         "600BC",\
+#         "20th century model of 17th century dwelling",\
+#         "1926-32",\
+#         "ca. 1870, 1892, 1898, 1941",\
+#         # "Construction began on June 24, 1939 (opening ceremony March 24, 1940)",\
+#         "1920s",\
+#         "1938/47",\
+#         "01 March1912",\
+#         "1650-1660",\
+#         "1847-48",\
+#         "20-May-1918",\
+#         "7-8 December 1868",\
+#         "19th century",\
+#         "01 March 2014",\
+#         "600/47",\
+#         "1920?",\
+#         "late 19th century-early 20th century",\
+#         "early to mid 19th century",\
+#         "l875-1897",\
+#         "mid-to-late 18th century",\
+#         "600-700 AD",\
+#         "180-145 BC",\
+#         "Feb 1916-Sep1917",\
+#         "1915-Feb 1916",\
+#         "11.12.1868",\
+#         "ca. -3000 - ca.",\
+#         "ca. 1500 - ca. 1600",\
+#         "ca. -2000 - ca. -1000",\
+#         "3 BC - 6 AD",\
+#         "Jan 26, 1960",\
+#         "mid-3rd century",\
+#         "8th-9th century BC",\
+#         "9TH,8THCENTURY",\
+#         "A.D. 918-1392",\
+#         "1956, printed 1979",\
+#         "designed 1951; made 1953",\
+#         "designed 1945-46, made 1946-47",\
+#         "designed 1948-50; made about 1950-53",\
+#         "designed 1951-52; made 1953-about 1960",\
+#         "first half of 20th century",\
+#         "5th-3rd century B.C.",\
+#         "1860s-70s",\
+#         "Late 18th Century",\
+#         "2002-03",\
+#         "October 21, 1999 - January 21, 2000"
+#         # "3rd quarter of the 18th century",\
+#         # "Original construction in the 13th or 14th century; Damaged in the 17th century and rebuilt in the last quarter of the 17th century."
+#
+#     ]
 
 
 def start_date_parse(date_string):
@@ -590,29 +610,29 @@ def start_date_parse(date_string):
 
 
 
-f=open('/Users/naveed/Documents/Preloader demo/MFABostonAddl_L02_PL20120204_enhanced_legal_qc.csv','rU')
-fr=open('/Users/naveed/Documents/Preloader demo/MFABostonAddl_L02_PL20120204_enhanced_legal_qc-test.csv','a')
-csv_reader=csv.DictReader(f,delimiter=',')
-csv_writer=csv.writer(fr,delimiter=',')
-i=0
-all_forms=[]
-for row in csv_reader:
-    new_row=[]
-    i+=1
-    print i
-    if row['Object Date'].strip()!='':
-        print "input: %s"%row['Object Date']
-        if row['Object Date'] not in all_forms:
-            all_forms.append(row['Object Date'])
-            new_row.append(row['Object Date'])
-            try:
-                print "output:",start_date_parse(row['Object Date'])
-                new_row.append(start_date_parse(row['Object Date']))
-            except:
-                 print "exception!"
-                 new_row.append('exception')
-            print ""
-            csv_writer.writerow(new_row)
+# f=open('/Users/naveed/Documents/Preloader demo/MFABostonAddl_L02_PL20120204_enhanced_legal_qc.csv','rU')
+# fr=open('/Users/naveed/Documents/Preloader demo/MFABostonAddl_L02_PL20120204_enhanced_legal_qc-test.csv','a')
+# csv_reader=csv.DictReader(f,delimiter=',')
+# csv_writer=csv.writer(fr,delimiter=',')
+# i=0
+# all_forms=[]
+# for row in csv_reader:
+#     new_row=[]
+#     i+=1
+#     print i
+#     if row['Object Date'].strip()!='':
+#         print "input: %s"%row['Object Date']
+#         if row['Object Date'] not in all_forms:
+#             all_forms.append(row['Object Date'])
+#             new_row.append(row['Object Date'])
+#             try:
+#                 print "output:",start_date_parse(row['Object Date'])
+#                 new_row.append(start_date_parse(row['Object Date']))
+#             except:
+#                  print "exception!"
+#                  new_row.append('exception')
+#             print ""
+#             csv_writer.writerow(new_row)
 
 
 # for test in tests:
