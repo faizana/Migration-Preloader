@@ -2,7 +2,7 @@ import cherrypy
 from cherrypy.lib import static
 import os
 from dateutil.parser import parser
-from date_parser import start_date_parse
+from date_parser_v2 import start_date_parse
 import csv
 import simplejson
 import os
@@ -128,8 +128,8 @@ def get_mapping_status(request):
 
 
         else:
-            return Response(simplejson.dumps(dict(message='No jobs in process or completed',code='QUEUE-EMPTY')))  
-            
+            return Response(simplejson.dumps(dict(message='No jobs in process or completed',code='QUEUE-EMPTY')))
+
 @view_config(route_name='download_report', renderer='json')
 def download_report(request):
         global result_paths_dict
@@ -157,7 +157,7 @@ def download_csv(request):
         content_type='text/csv'
         )
         response.headers['Content-Disposition'] = ("attachment; filename="+os.path.basename(path))
-        return response   
+        return response
 
 def get_total_rows(csv_file):
         rows=''
@@ -214,56 +214,62 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
             result_dict[row[id_column]]={}
             c+=1
             sm=0
-            try:
-                row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
-            except:
-                row[validate_column]=row[validate_column].decode('latin-1')
-                row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
-            query_val=row[validate_column].split(',')
-            for qv in query_val:
+            if validate_column in row.keys():
+                try:
+                    row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
+                except:
+                    row[validate_column]=row[validate_column].decode('latin-1')
+                    row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
+                query_val=row[validate_column].split(',')
+                for qv in query_val:
 
-                # print qv
-                if qv.strip()!='' and qv.isdigit()==True and qv.strip() in country_id_dict.keys():
-                    result_dict[row[id_column]]['query_term']=row[validate_column]
-                    result_dict[row[id_column]]['artstor_country']=country_id_dict[qv]['artstor_term']
-                    result_dict[row[id_column]]['tgn_id']=qv
-                    result_dict[row[id_column]]['source_term']=country_id_dict[qv]['source_term']
-                    result_dict[row[id_column]]['status']='Matched'
-                    sm=1
-                    break
-                    # continue
-
-                elif qv.strip()!='' and qv.isdigit()==False:
-                    term_match=find_term_match(qv.lower().strip(),country_term_dict.keys())
-                    if term_match!=False:
-
+                    # print qv
+                    if qv.strip()!='' and qv.isdigit()==True and qv.strip() in country_id_dict.keys():
                         result_dict[row[id_column]]['query_term']=row[validate_column]
-                        result_dict[row[id_column]]['artstor_country']=country_term_dict[term_match]['artstor_term']
-
-                        result_dict[row[id_column]]['tgn_id']=country_term_dict[term_match]['tgn_id']
-
+                        result_dict[row[id_column]]['artstor_country']=country_id_dict[qv]['artstor_term']
+                        result_dict[row[id_column]]['tgn_id']=qv
+                        result_dict[row[id_column]]['source_term']=country_id_dict[qv]['source_term']
                         result_dict[row[id_column]]['status']='Matched'
-
                         sm=1
                         break
-                    # continue
+                        # continue
 
-            if sm==0 and query_val[0]!='':
-                result_dict[row[id_column]]['status']='Not Matched'
-                result_dict[row[id_column]]['query_term']=' '.join(query_val)
-            elif sm==0 and query_val[0]=='':
-                result_dict[row[id_column]]['status']='null'
-                result_dict[row[id_column]]['query_term']=''
+                    elif qv.strip()!='' and qv.isdigit()==False:
+                        term_match=find_term_match(qv.lower().strip(),country_term_dict.keys())
+                        if term_match!=False:
+
+                            result_dict[row[id_column]]['query_term']=row[validate_column]
+                            result_dict[row[id_column]]['artstor_country']=country_term_dict[term_match]['artstor_term']
+
+                            result_dict[row[id_column]]['tgn_id']=country_term_dict[term_match]['tgn_id']
+
+                            result_dict[row[id_column]]['status']='Matched'
+
+                            sm=1
+                            break
+                        # continue
+
+                if sm==0 and query_val[0]!='':
+                    result_dict[row[id_column]]['status']='Not Matched'
+                    result_dict[row[id_column]]['query_term']=' '.join(query_val)
+                elif sm==0 and query_val[0]=='':
+                    result_dict[row[id_column]]['status']='null'
+                    result_dict[row[id_column]]['query_term']=''
 
 
-            # global_status[csv_ref]['result']=result_dict
-            mapping_status[csv_ref]['result']=result_dict
-            mapping_status[csv_ref]['category']=category
-            if 'artstor country' in [x.lower().strip() for x in row.keys() if x is not None]:
-                mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c)
+                # global_status[csv_ref]['result']=result_dict
+                mapping_status[csv_ref]['result']=result_dict
+                mapping_status[csv_ref]['category']=category
+                if 'artstor country' in [x.lower().strip() for x in row.keys() if x is not None]:
+                    mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c)
+                else:
+                    mapping_status[csv_ref]['converted_csv']=False
+                process_queue.put(mapping_status)
             else:
+                mapping_status[csv_ref]['result']={}
+                mapping_status[csv_ref]['category']=category
                 mapping_status[csv_ref]['converted_csv']=False
-            process_queue.put(mapping_status)
+                process_queue.put(mapping_status)
     elif category=='Classification':
         classification_map=open(classification_map,'rU')
         classification_map=csv.DictReader(classification_map,delimiter=',',dialect=csv.excel_tab)
@@ -274,32 +280,38 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
             result_dict[row[id_column]]={}
             c+=1
             sm=0
-            query_val=row[validate_column].split(',')
-            for qv in query_val:
-                # print qv.strip(),class_term_dict.keys()
-                if qv.strip()!='':
-                    term_match=find_term_match(qv.lower().strip(),class_term_dict.keys())
-                    if term_match!=False:
-                        result_dict[row[id_column]]['query_term']=' '.join(query_val)
-                        result_dict[row[id_column]]['keyword']=term_match
-                        result_dict[row[id_column]]['artstor_classification']=class_term_dict[term_match]['artstor_term']
-                        result_dict[row[id_column]]['status']='Matched'
-                        sm=1
-                        break
-            if sm==0 and query_val[0]!='':
-                result_dict[row[id_column]]['status']='Not Matched'
-                result_dict[row[id_column]]['query_term']=' '.join(query_val)
-            elif sm==0 and query_val[0]=='':
-                result_dict[row[id_column]]['status']='null'
-                result_dict[row[id_column]]['query_term']=''
+            if validate_column in row.keys():
+                query_val=row[validate_column].split(',')
+                for qv in query_val:
+                    # print qv.strip(),class_term_dict.keys()
+                    if qv.strip()!='':
+                        term_match=find_term_match(qv.lower().strip(),class_term_dict.keys())
+                        if term_match!=False:
+                            result_dict[row[id_column]]['query_term']=' '.join(query_val)
+                            result_dict[row[id_column]]['keyword']=term_match
+                            result_dict[row[id_column]]['artstor_classification']=class_term_dict[term_match]['artstor_term']
+                            result_dict[row[id_column]]['status']='Matched'
+                            sm=1
+                            break
+                if sm==0 and query_val[0]!='':
+                    result_dict[row[id_column]]['status']='Not Matched'
+                    result_dict[row[id_column]]['query_term']=' '.join(query_val)
+                elif sm==0 and query_val[0]=='':
+                    result_dict[row[id_column]]['status']='null'
+                    result_dict[row[id_column]]['query_term']=''
 
-            mapping_status[csv_ref]['result']=result_dict
-            mapping_status[csv_ref]['category']=category
-            if 'artstor classification' in [x.lower().strip() for x in row.keys() if x is not None]:
-                mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c)
+                mapping_status[csv_ref]['result']=result_dict
+                mapping_status[csv_ref]['category']=category
+                if 'artstor classification' in [x.lower().strip() for x in row.keys() if x is not None]:
+                    mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c)
+                else:
+                    mapping_status[csv_ref]['converted_csv']=False
+                process_queue.put(mapping_status)
             else:
+                mapping_status[csv_ref]['result']={}
+                mapping_status[csv_ref]['category']=category
                 mapping_status[csv_ref]['converted_csv']=False
-            process_queue.put(mapping_status)
+                process_queue.put(mapping_status)
 
     elif category=='Date':
         c=0
@@ -307,52 +319,59 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
         for row in csv_dict:
             result_dict[row[id_column]]={}
             c+=1
-            try:
-                query_term=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
-            except:
-                row[validate_column]=row[validate_column].decode('latin-1')
-                query_term=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
-
-            if query_term.strip()!='':
+            if validate_column in row.keys():
                 try:
-                    result=start_date_parse(query_term)
-                    ed=re.sub('\(|\)|\'','',result.split(',')[0])
-                    ld=re.sub('\(|\)|\'','',result.split(',')[1])
-                    logic=",".join(result.split(',')[2:])
-                    logic=re.sub("'|\(|\)",'',logic)
-                    if ed!='' and ld!='':
-                        result_dict[row[id_column]]['status']='Converted'
-                        result_dict[row[id_column]]['query_term']=query_term
-                        result_dict[row[id_column]]['Earliest Date']=ed
-                        result_dict[row[id_column]]['Latest Date']=ld
-                        result_dict[row[id_column]]['Logic']=logic
-                    else:
+                    query_term=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
+                except:
+                    row[validate_column]=row[validate_column].decode('latin-1')
+                    query_term=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
+
+                if query_term.strip()!='':
+                    try:
+                        result=start_date_parse(query_term)
+                        ed=re.sub('\(|\)|\'','',result.split(',')[0])
+                        ld=re.sub('\(|\)|\'','',result.split(',')[1])
+                        logic=",".join(result.split(',')[2:])
+                        logic=re.sub("'|\(|\)",'',logic)
+                        if ed!='' and ld!='':
+                            result_dict[row[id_column]]['status']='Converted'
+                            result_dict[row[id_column]]['query_term']=query_term
+                            result_dict[row[id_column]]['Earliest Date']=ed
+                            result_dict[row[id_column]]['Latest Date']=ld
+                            result_dict[row[id_column]]['Logic']=logic
+                        else:
+                            result_dict[row[id_column]]['status']='Exception'
+                            result_dict[row[id_column]]['query_term']=query_term
+                            result_dict[row[id_column]]['Earliest Date']=ed
+                            result_dict[row[id_column]]['Latest Date']=ld
+                            result_dict[row[id_column]]['Logic']=logic
+                    except :
+                        print 'Exception'
+                        traceback.print_exc(file=sys.stdout)
                         result_dict[row[id_column]]['status']='Exception'
                         result_dict[row[id_column]]['query_term']=query_term
-                        result_dict[row[id_column]]['Earliest Date']=ed
-                        result_dict[row[id_column]]['Latest Date']=ld
-                        result_dict[row[id_column]]['Logic']=logic
-                except:
-                    traceback.print_exc(file=sys.stdout)
-                    result_dict[row[id_column]]['status']='Exception'
-                    result_dict[row[id_column]]['query_term']=query_term
-                    result_dict[row[id_column]]['Earliest Date']=''
-                    result_dict[row[id_column]]['Latest Date']=''
-                    result_dict[row[id_column]]['Logic']=''
-            else:
-                    result_dict[row[id_column]]['status']='Null Value'
-                    result_dict[row[id_column]]['query_term']=''
-                    result_dict[row[id_column]]['Earliest Date']=''
-                    result_dict[row[id_column]]['Latest Date']=''
-                    result_dict[row[id_column]]['Logic']=''
+                        result_dict[row[id_column]]['Earliest Date']=''
+                        result_dict[row[id_column]]['Latest Date']=''
+                        result_dict[row[id_column]]['Logic']=''
+                else:
+                        result_dict[row[id_column]]['status']='Null Value'
+                        result_dict[row[id_column]]['query_term']=''
+                        result_dict[row[id_column]]['Earliest Date']=''
+                        result_dict[row[id_column]]['Latest Date']=''
+                        result_dict[row[id_column]]['Logic']=''
 
-            mapping_status[csv_ref]['result']=result_dict
-            mapping_status[csv_ref]['category']=category
-            if 'artstor earliest date' and 'artstor latest date' in [x.lower().strip() for x in row.keys() if x is not None]:
-                mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c)
+                mapping_status[csv_ref]['result']=result_dict
+                mapping_status[csv_ref]['category']=category
+                if 'artstor earliest date' and 'artstor latest date' in [x.lower().strip() for x in row.keys() if x is not None]:
+                    mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c)
+                else:
+                    mapping_status[csv_ref]['converted_csv']=False
+                process_queue.put(mapping_status)
             else:
+                mapping_status[csv_ref]['result']={}
+                mapping_status[csv_ref]['category']=category
                 mapping_status[csv_ref]['converted_csv']=False
-            process_queue.put(mapping_status)
+                process_queue.put(mapping_status)
 
     print 'succesful end of validation',len(result_dict.keys())
 
@@ -372,11 +391,11 @@ def generate_class_dict(csv_dict):
     # run_simple_date_parser.exposed=True
 
 
-    
+
 
     # get_artstor_country_list.exposed=True
 
-    
+
 
     # get_artstor_class_list.exposed=True
 
@@ -474,7 +493,7 @@ def generate_class_dict(csv_dict):
     #                              "attachment", os.path.basename(path))
     # download_csv.exposed = True
 
-    
+
 
 
 
@@ -516,11 +535,19 @@ def write_modified_csv(row,rd,fname,category,counter):
             elif heads.lower().strip()=='artstor latest date' and 'Latest Date' in rd.keys():
                 new_row.append(rd['Latest Date'])
             else:
-                new_row.append(row[heads])
+                if isinstance(row[heads],str):
+                  new_row.append(row[heads])
+                else:
+                  new_row.append(row[heads].encode('utf-8'))
 
 
+    try:
 
-    csv_writer.writerow(new_row)
+      csv_writer.writerow(new_row)
+    except:
+      csv_writer.writerow([])
+      for i in new_row:
+        print i,type(i)
     return os.path.abspath(f_path)
 
 
@@ -648,6 +675,6 @@ def main():
 
 if __name__ == '__main__':
     app = main()
-    server = make_server('0.0.0.0', 8080, app)
-    print ('Starting up server on http://localhost:8080')
+    server = make_server('0.0.0.0', 8888, app)
+    print ('Starting up server on http://localhost:8888')
     server.serve_forever()
