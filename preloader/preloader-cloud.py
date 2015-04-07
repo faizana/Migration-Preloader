@@ -214,7 +214,7 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
             result_dict[row[id_column]]={}
             c+=1
             sm=0
-            if validate_column in row.keys():
+            if validate_column in [x.strip() for x in row.keys()]:
                 try:
                     row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
                 except:
@@ -280,7 +280,7 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
             result_dict[row[id_column]]={}
             c+=1
             sm=0
-            if validate_column in row.keys():
+            if validate_column in [x.strip() for x in row.keys()]:
                 query_val=row[validate_column].split(',')
                 for qv in query_val:
                     # print qv.strip(),class_term_dict.keys()
@@ -319,7 +319,7 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
         for row in csv_dict:
             result_dict[row[id_column]]={}
             c+=1
-            if validate_column in row.keys():
+            if validate_column in [x.strip() for x in row.keys()]:
                 try:
                     query_term=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
                 except:
@@ -328,7 +328,7 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
 
                 if query_term.strip()!='':
                     try:
-                        result=start_date_parse(query_term)
+                        result=start_date_parse(query_term.strip())
                         ed=re.sub('\(|\)|\'','',result.split(',')[0])
                         ld=re.sub('\(|\)|\'','',result.split(',')[1])
                         logic=",".join(result.split(',')[2:])
