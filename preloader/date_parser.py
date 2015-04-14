@@ -17,7 +17,7 @@ def remove_syms(date_string):
 
 
 def detect_month_year_conflict(date_string):
-    splits=re.split('-|/|\.',date_string)
+    splits=re.split('-|\.',date_string)
     if len(re.search('\d+',splits[0]).group())!=len(re.search('\d+',splits[-1]).group()):
         return True
     else:
@@ -304,7 +304,7 @@ def parse_date(input_string):
         else:
             year=int(year)
             year *= calculate_year_multiplier(date_string)
-            if not is_bc(date_string) and calculate_year_multiplier(date_string) == 100:
+            if calculate_year_multiplier(date_string) == 100:
                 check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE|END',date_string))
                 quarter,ls=adjust_for_quarters(date_string)
                 logic_string+=ls+' Simple epoch detected in '+year_string
@@ -321,12 +321,22 @@ def parse_date(input_string):
                         t_ld.append(ldo)
                     # print t_ed,t_ld
                     if len(t_ed)<2 and len(t_ld)<2:
-                        return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[0])),logic_string+' '+logic
+                        if not is_bc(date_string):
+                            return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[0])),logic_string+' '+logic
+                        else:
+                            return int(((int(year)) * -1)+(100*t_ed[0])), int(((int(year)) * -1)+(100*t_ld[0])),logic_string+' '+logic
+
                     else:
                         if t_ed[-1]!=0 and t_ld[-1]!=0:
-                            return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[-1])),logic_string+' '+logic
+                            if not is_bc(date_string):
+                                return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[-1])),logic_string+' '+logic
+                            else:
+                                return int(((int(year)) * -1)+(100*t_ed[0])), int(((int(year)) * -1)+(100*t_ld[-1])),logic_string+' '+logic
                         else:
-                            return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[0])),logic_string+' '+logic
+                            if not is_bc(date_string):
+                                return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[0])),logic_string+' '+logic
+                            else:
+                                return int(((int(year)) * -1)+(100*t_ed[0])), int(((int(year)) * -1)+(100*t_ld[0])),logic_string+' '+logic
                 else:
                     if ls.find('Quarter')!=-1:
                         return quarter + year - 100, quarter + year - 100+25,logic_string
@@ -336,10 +346,13 @@ def parse_date(input_string):
                         else:
                             return quarter+year - 100, year - 1,logic_string
                     else:
-                        return year - 100, year - 1,logic_string
+                        if not is_bc(date_string):
+                            return year - 100, year - 1,logic_string
+                        else:
+                            return (int(year)) * -1, (int(year)-99) * -1,logic_string
 
             elif is_bc(date_string):
-                if date_string.find('MILLION')==-1 or date_string.find('M')==-1:
+                if date_string.find('MILLION')==-1 and date_string.find('M')==-1 and calculate_year_multiplier(date_string)!=100:
                     year=re.sub('\D+','',date_string)
                     logic_string='BC date found,converting to negative numeric format'
                 else:
@@ -595,7 +608,11 @@ def out_of_the_box_cases(date_string):
 #         "1860s-70s",\
 #         "Late 18th Century",\
 #         "2002-03",\
-#         "October 21, 1999 - January 21, 2000"
+#         "October 21, 1999 - January 21, 2000",\
+#         "about 1903-08",\
+#         "6th Century B.C.",\
+#         "1/15/1938",\
+#         "late 6th century BC"
 #         # "3rd quarter of the 18th century",\
 #         # "Original construction in the 13th or 14th century; Damaged in the 17th century and rebuilt in the last quarter of the 17th century."
 #
