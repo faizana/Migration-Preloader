@@ -552,76 +552,76 @@ def out_of_the_box_cases(date_string):
 
 
 
-if __name__ == "__main__":
-    tests = ["2004",\
-        "1920 C.E.",\
-        "19th Century",\
-        "400BC",\
-        "1 million years ago",\
-        "30 years ago",\
-        "1920-25",\
-        "1920-1925",\
-        "1920 to 1965",\
-        "1320-45",\
-        "1926-32",\
-        "unknown, possibly 1st century",\
-        "late 7th century",\
-        "early 8th century",\
-        "late 7th, early 8th century",\
-        "600BC",\
-        "20th century model of 17th century dwelling",\
-        "1926-32",\
-        "ca. 1870, 1892, 1898, 1941",\
-        # "Construction began on June 24, 1939 (opening ceremony March 24, 1940)",\
-        "1920s",\
-        "1938/47",\
-        "01 March1912",\
-        "1650-1660",\
-        "1847-48",\
-        "20-May-1918",\
-        "7-8 December 1868",\
-        "19th century",\
-        "01 March 2014",\
-        "600/47",\
-        "1920?",\
-        "late 19th century-early 20th century",\
-        "early to mid 19th century",\
-        "l875-1897",\
-        "mid-to-late 18th century",\
-        "600-700 AD",\
-        "180-145 BC",\
-        "Feb 1916-Sep1917",\
-        "1915-Feb 1916",\
-        "11.12.1868",\
-        "ca. -3000 - ca.",\
-        "ca. 1500 - ca. 1600",\
-        "ca. -2000 - ca. -1000",\
-        "3 BC - 6 AD",\
-        "Jan 26, 1960",\
-        "mid-3rd century",\
-        "8th-9th century BC",\
-        "9TH,8THCENTURY",\
-        "A.D. 918-1392",\
-        "1956, printed 1979",\
-        "designed 1951; made 1953",\
-        "designed 1945-46, made 1946-47",\
-        "designed 1948-50; made about 1950-53",\
-        "designed 1951-52; made 1953-about 1960",\
-        "first half of 20th century",\
-        "5th-3rd century B.C.",\
-        "1860s-70s",\
-        "Late 18th Century",\
-        "2002-03",\
-        "October 21, 1999 - January 21, 2000",\
-        "about 1903-08",\
-        "6th Century B.C.",\
-        "1/15/1938",\
-        "late 6th century BC",\
-        "July 1, 1941"
-        # "3rd quarter of the 18th century",\
-        # "Original construction in the 13th or 14th century; Damaged in the 17th century and rebuilt in the last quarter of the 17th century."
-
-    ]
+# if __name__ == "__main__":
+#     tests = ["2004",\
+#         "1920 C.E.",\
+#         "19th Century",\
+#         "400BC",\
+#         "1 million years ago",\
+#         "30 years ago",\
+#         "1920-25",\
+#         "1920-1925",\
+#         "1920 to 1965",\
+#         "1320-45",\
+#         "1926-32",\
+#         "unknown, possibly 1st century",\
+#         "late 7th century",\
+#         "early 8th century",\
+#         "late 7th, early 8th century",\
+#         "600BC",\
+#         "20th century model of 17th century dwelling",\
+#         "1926-32",\
+#         "ca. 1870, 1892, 1898, 1941",\
+#         # "Construction began on June 24, 1939 (opening ceremony March 24, 1940)",\
+#         "1920s",\
+#         "1938/47",\
+#         "01 March1912",\
+#         "1650-1660",\
+#         "1847-48",\
+#         "20-May-1918",\
+#         "7-8 December 1868",\
+#         "19th century",\
+#         "01 March 2014",\
+#         "600/47",\
+#         "1920?",\
+#         "late 19th century-early 20th century",\
+#         "early to mid 19th century",\
+#         "l875-1897",\
+#         "mid-to-late 18th century",\
+#         "600-700 AD",\
+#         "180-145 BC",\
+#         "Feb 1916-Sep1917",\
+#         "1915-Feb 1916",\
+#         "11.12.1868",\
+#         "ca. -3000 - ca.",\
+#         "ca. 1500 - ca. 1600",\
+#         "ca. -2000 - ca. -1000",\
+#         "3 BC - 6 AD",\
+#         "Jan 26, 1960",\
+#         "mid-3rd century",\
+#         "8th-9th century BC",\
+#         "9TH,8THCENTURY",\
+#         "A.D. 918-1392",\
+#         "1956, printed 1979",\
+#         "designed 1951; made 1953",\
+#         "designed 1945-46, made 1946-47",\
+#         "designed 1948-50; made about 1950-53",\
+#         "designed 1951-52; made 1953-about 1960",\
+#         "first half of 20th century",\
+#         "5th-3rd century B.C.",\
+#         "1860s-70s",\
+#         "Late 18th Century",\
+#         "2002-03",\
+#         "October 21, 1999 - January 21, 2000",\
+#         "about 1903-08",\
+#         "6th Century B.C.",\
+#         "1/15/1938",\
+#         "late 6th century BC",\
+#         "July 1, 1941"
+#         # "3rd quarter of the 18th century",\
+#         # "Original construction in the 13th or 14th century; Damaged in the 17th century and rebuilt in the last quarter of the 17th century."
+#
+#     ]
 
 
 def start_date_parse(date_string):
@@ -657,14 +657,14 @@ def start_date_parse(date_string):
 #             csv_writer.writerow(new_row)
 
 
-for test in tests:
-    print "input: %s"%test
-    print "output:", start_date_parse(test)
-    # try:
-    #     print "output:", start_date_parse(test)
-    # except:
-    #     print "exception"
-    print ""
+# for test in tests:
+#     print "input: %s"%test
+#     print "output:", start_date_parse(test)
+#     # try:
+#     #     print "output:", start_date_parse(test)
+#     # except:
+#     #     print "exception"
+#     print ""
 
 
 
