@@ -191,8 +191,8 @@ def generate_country_dict(csv_dict):
 
 def find_term_match(val,val_arr):
     found=False
-    for vals in val_arr:
-        if val.find(vals)!=-1:
+    for vals in [x.lower() for x in val_arr]:
+        if vals.strip().find(val)!=-1:
             found=vals
             break
     return found
