@@ -220,7 +220,13 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
                 except:
                     row[validate_column]=row[validate_column].decode('latin-1')
                     row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
-                query_val=row[validate_column].split(',')
+                contains_brackets=bool(re.search('[a-z]+\s+\(\D+\)',row[validate_column].strip().lower()))
+                if contains_brackets==True:
+                    query_val=re.sub('\(\D+\)','',row[validate_column])
+                    query_val=query_val.split(',')
+                else:
+
+                    query_val=row[validate_column].split(',')
                 for qv in query_val:
 
                     # print qv
