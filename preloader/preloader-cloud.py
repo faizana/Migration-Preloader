@@ -190,18 +190,13 @@ def generate_country_dict(csv_dict):
 
 
 def find_term_match(val,val_arr,category):
-    found=False
     terms=[]
     for vals in val_arr:
-        if vals.strip().find(val)!=-1:
+        if bool(re.search('\b'+vals+'\b',val)):
             terms.append(vals)
-            if category=='Country':
-                if not bool(re.search('\s+or\s+')):
-                    break
     if len(terms)==0:
         terms=False
-    found=terms
-    return found
+    return terms
 
 def start_validation(conversion_queue,process_queue,csv_ref,category,validate_column,id_column,geography_map,classification_map):
     global_status=conversion_queue.get()
