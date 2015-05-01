@@ -189,12 +189,18 @@ def generate_country_dict(csv_dict):
 
 
 
-def find_term_match(val,val_arr):
+def find_term_match(val,val_arr,category):
     found=False
-    for vals in [x.lower() for x in val_arr]:
+    terms=[]
+    for vals in val_arr:
         if vals.strip().find(val)!=-1:
-            found=vals
-            break
+            terms.append(vals)
+            if category=='Country':
+                if not bool(re.search('\s+or\s+')):
+                    break
+    if len(terms)==0:
+        terms=False
+    found=terms
     return found
 
 def start_validation(conversion_queue,process_queue,csv_ref,category,validate_column,id_column,geography_map,classification_map):
@@ -241,8 +247,8 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
                         # continue
 
                     elif qv.strip()!='' and qv.isdigit()==False:
-                        term_match=find_term_match(qv.lower().strip(),country_term_dict.keys())
-                        if term_match!=False:
+                        term_match=find_term_match(qv.lower().strip(),country_term_dict.keys(),category)
+                        if term_match!=False and len(term_match)<2:
 
                             result_dict[row[id_column]]['query_term']=row[validate_column]
                             result_dict[row[id_column]]['artstor_country']=country_term_dict[term_match]['artstor_term']
@@ -253,6 +259,19 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
 
                             sm=1
                             break
+                        else:
+                            result_dict[row[id_column]]['query_term']=row[validate_column]
+                            countries=[]
+                            tgns=[]
+                            for terms in term_match:
+                                countries.append(country_term_dict[terms]['artstor_term'])
+                                tgns.append(country_term_dict[terms]['tgn_id'])
+                            result_dict[row[id_column]]['artstor_country']="|".join(countries)
+                            result_dict[row[id_column]]['tgn_id']="|".join(tgns)
+                            result_dict[row[id_column]]['status']='Matched'
+                            sm=1
+                            break
+
                         # continue
 
                 if sm==0 and query_val[0]!='':
@@ -291,14 +310,29 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
                 for qv in query_val:
                     # print qv.strip(),class_term_dict.keys()
                     if qv.strip()!='':
-                        term_match=find_term_match(qv.lower().strip(),class_term_dict.keys())
-                        if term_match!=False:
+                        term_match=find_term_match(qv.lower().strip(),class_term_dict.keys(),category)
+                        if term_match!=False and len(term_match)<2:
                             result_dict[row[id_column]]['query_term']=' '.join(query_val)
                             result_dict[row[id_column]]['keyword']=term_match
                             result_dict[row[id_column]]['artstor_classification']=class_term_dict[term_match]['artstor_term']
                             result_dict[row[id_column]]['status']='Matched'
                             sm=1
                             break
+                        else:
+                            result_dict[row[id_column]]['query_term']=' '.join(query_val)
+                            classes=[]
+                            keywords=[]
+                            for terms in term_match:
+                                classes.append(class_term_dict[terms]['artstor_term'])
+                                keywords.append(terms)
+                            result_dict[row[id_column]]['artstor_classification']="|".join(classes)
+                            result_dict[row[id_column]]['keyword']="|".join(keywords)
+                            result_dict[row[id_column]]['status']='Matched'
+                            sm=1
+                            break
+
+
+
                 if sm==0 and query_val[0]!='':
                     result_dict[row[id_column]]['status']='Not Matched'
                     result_dict[row[id_column]]['query_term']=' '.join(query_val)
