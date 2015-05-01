@@ -254,7 +254,7 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
 
                             sm=1
                             break
-                        else:
+                        elif term_match!=False and len(term_match)>=2:
                             result_dict[row[id_column]]['query_term']=row[validate_column]
                             countries=[]
                             tgns=[]
@@ -313,7 +313,7 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
                             result_dict[row[id_column]]['status']='Matched'
                             sm=1
                             break
-                        else:
+                        elif term_match!=False and len(term_match)>=2:
                             result_dict[row[id_column]]['query_term']=' '.join(query_val)
                             classes=[]
                             keywords=[]
