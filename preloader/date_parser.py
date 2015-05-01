@@ -13,6 +13,11 @@ def remove_syms(date_string):
         date_string=date_string.replace(sym,'')
     date_string=re.sub('A\.D\.|A\.D','AD',date_string)
     date_string=re.sub('B\.C\.|B\.C','BC',date_string)
+    date_string=re.sub('\s+C\.\s+|\s+C\.$','CENTURY',date_string)
+    date_string=re.sub('^C\.\s+','',date_string)
+    date_string=re.sub('\s+BEG\s+|BEG\s+|BEG\.\s+','BEGINNING',date_string)
+    date_string=re.sub('\s+OR\s+','-',date_string)
+
     return date_string
 
 
@@ -38,7 +43,7 @@ def parse_date(input_string):
     # year_string = re.sub(r'\d+,\s', '', date_string) # Jan 26, 1960
     year_string = re.sub(r'\d.+ QUARTER', '', date_string)
     # contains_epoch_with_hyp=_contains_epoch_with_hyp(year_string)
-    contains_complex_epoch=bool(re.search('^.+\d+.+(,).+\d+.+(CENTURY)$|^\d+.+(,)\d+.+(CENTURY)$',date_string))
+    contains_complex_epoch=bool(re.search('^.+\d+.+(,).+\d+.+(CENTURY)$|^\d+.+(,)\d+.+(CENTURY)$|^.+\d+.+(,).+\d+.+(CENTURYAD)$|\d+.+(,).+\d+.+(CENTURYAD)$|.+\d+.+(,)\d+.+(CENTURY)',date_string))
 
     contains_dots_with_year=_contains_dots_with_year(date_string)
     # print 'is_range(year_string)',is_range(year_string),"bool(re.search('\d+S$',date_string))",bool(re.search('\d+S$',date_string))
@@ -65,8 +70,9 @@ def parse_date(input_string):
         return parse_ranges(year_string)
     elif is_range(year_string) and bool(re.search('\D+',year_string.replace('-','')))==True:
         # print 'mkc'
-        date_string = input_string.upper().replace(' ','')
+        date_string = input_string.upper()
         date_string=remove_syms(date_string)
+        date_string=date_string.replace(' ','')
          #remove whitespaces
         if date_string.find('CA.')!=-1:
             date_string=date_string.replace('CA.','')
@@ -87,7 +93,7 @@ def parse_date(input_string):
         date_string=re.sub(r'AND|TO','-',date_string)
         logic_string='alphanumeric range detected in '+input_string
         # print date_string
-        contains_s=_ends_with_s(date_string.replace(' ',''))
+        contains_s=_ends_with_s(date_string)
         contains_date_with_words_and_hyp=_contains_date_with_words_and_hyp(date_string)
         contains_epoch_with_hyp=_contains_epoch_with_hyp(date_string)
         contains_multiple_ranges=bool(re.search('\d+(-)\d+(,|;)\d+(-)\d+',date_string))
@@ -108,7 +114,11 @@ def parse_date(input_string):
             date_string=date_string.replace('S','')
             if date_string.find('-')!=-1:
                 date_string=date_string.split('-')
-                ed=date_string[0]
+                if bool(re.search('\d+',date_string[0])):
+                    ed=date_string[0]
+                else:
+                    date_string[1]=re.search('\d+',date_string[1]).group()
+                    ed=date_string[1]
                 z_count=date_string[1].count('0')
                 trailing_n=''
                 for c in range(z_count):
@@ -134,8 +144,8 @@ def parse_date(input_string):
 
 
         elif contains_date_with_words_and_hyp:
-            if bool(re.search('\D+\d+(-)\d+$',date_string)):
-                res=start_date_parse(re.sub('[A-Z]+','',date_string))
+            if bool(re.search('\D+\d+(-)\d+$|\d+(-)\d+',date_string)):
+                res=start_date_parse(re.search('\d+(-)\d+',date_string).group())
                 res+=', Date found containing words with "-", applied range logic to convert'
                 return res
             elif bool(re.search('^\D+\d+(-)\D+\d+$|^\d+(-)\D+\d+$',date_string)):
@@ -159,7 +169,7 @@ def parse_date(input_string):
             # print 'here'
             get_exact_string=re.compile(r'[A-Z]+\d+[A-Z][A-Z](CENTURY-)[A-Z]+\d+[A-Z][A-Z](CENTURY)')
             get_exact_string1=re.compile(r'[A-Z]+(-\d+[A-Z][A-Z]CENTURY)|[A-Z]+(-[A-Z]+\d+[A-Z][A-Z]CENTURY)|[A-Z]+(-\d+[A-Z]+\d+[A-Z]+CENTURY)|'
-                                         r'([A-Z]+-+)+[A-Z]+\d+\D+CENTURY|\d+(-)\d+AD') #MID-19THCENTURY,MID-TOLATE19THCENTURY
+                                         r'([A-Z]+-+)+[A-Z]+\d+\D+CENTURY|\d+(-)\d+AD|[A-Z]+\d+[A-Z][A-Z](-[A-Z]+\d+[A-Z][A-Z]CENTURY)') #MID-19THCENTURY,MID-TOLATE19THCENTURY
             is_bc_date=re.compile(r'BC-|-BC|BC$')
             if bool(get_exact_string.search((year_string))):
                 check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE|END',year_string))
@@ -173,7 +183,7 @@ def parse_date(input_string):
             elif bool(get_exact_string1.search((year_string))):
 
                     if year_string.find('CENTURY')!=-1:
-                        exp=re.search('\d+\D+(CENTURY)|^\d+(-)\d+|\d+\D+(-)\d+\D+(CENTURY)',year_string)
+                        exp=re.search('\d+\D+(CENTURY)|^\d+(-)\d+|\d+\D+(-)\d+\D+(CENTURY)|\D+\d+\D+(-)\D+\d+\D+(CENTURY)',year_string)
                         # print start_date_parse(exp.group()),type(start_date_parse(exp.group()))
                         check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE|END',year_string))
                         if check_for_special_dates==False:
@@ -254,6 +264,7 @@ def parse_date(input_string):
 
     elif is_range(year_string)==None and bool(re.search('\d+S$',date_string))==True:
             date_string=date_string.replace('S','')
+            date_string=re.sub('\D+','',date_string)
             z_count=date_string.count('0')
             trailing_z=''
             trailing_n=''
@@ -279,33 +290,45 @@ def parse_date(input_string):
         t_ld=[]
         epochs=[]
         for y in years:
-            if bool(re.search('BEGINNING|EARLY|MID|LATE|END',y)):
-                edo,ldo,logic=adjust_for_special_words(y)
-                t_ed.append(edo)
-                t_ld.append(ldo)
-            else:
-                t_ed.append(0)
-                t_ld.append(0.99)
+            if bool(re.search('\d+',y)):
+                if bool(re.search('BEGINNING|EARLY|MID|LATE|END',y)):
+                    edo,ldo,logic=adjust_for_special_words(y)
+                    t_ed.append(edo)
+                    t_ld.append(ldo)
+                else:
+                    t_ed.append(0)
+                    t_ld.append(0.99)
 
             epochs.append(re.sub('\D+','',y))
 
         if len(t_ed)<2 and len(t_ld)<2:
             ed=(int(epochs[0])-1)*calculate_year_multiplier(years[0]+' CENTURY')+(100*t_ed[0])
             ld=(int(epochs[1])-1)*calculate_year_multiplier(years[1])+(100*t_ld[0])
+            ed=int(ed)
+            ld=int(ld)
             logic_string='Complex epoch with '+logic+ ' detected in '+input_string
         else:
             ed=(int(epochs[0])-1)*calculate_year_multiplier(years[0]+' CENTURY')+(100*t_ed[0])
             ld=(int(epochs[1])-1)*calculate_year_multiplier(years[1])+(100*t_ld[-1])
+            ed=int(ed)
+            ld=int(ld)
             logic_string='Century epoch found with range in '+input_string+'. Parsing to range.'
-        return int(ed),int(ld),logic_string
+
+        if len(str(ed))<5 and len(str(ld))<5:
+            return ed,ld,logic_string
+        else:
+            return '','','Unclear Format detected in ',year_string
 
     else:
         year =re.sub('\D+', '', year_string)
         if len(year)>4:
             ed=year[0:(len(year)/2)]
             ld=year[(len(year)/2):]
-            return ed,ld,'Found two different dates,assigning to ed/ld'
+            return '','','Unclear Format detected in ',year_string
         else:
+            if date_string.find('CENTURY')!=-1:
+                year=re.search('\d+[A-Z][A-Z]CENTURY',date_string.replace(' ','')).group()
+                year=re.sub('\D+', '', year)
             year=int(year)
             year *= calculate_year_multiplier(date_string)
             if calculate_year_multiplier(date_string) == 100:
@@ -381,6 +404,7 @@ def _contains_epoch_with_hyp(val):
                                        r'[A-Z]+(-[A-Z]+\d+[A-Z][A-Z]CENTURY)|'
                                        r'[A-Z]+(-\d+[A-Z]+\d+[A-Z]+CENTURY)|'
                                        r'([A-Z]+-+)+[A-Z]+\d+\D+CENTURY|'
+                                       r'[A-Z]+\d+[A-Z][A-Z](-[A-Z]+\d+[A-Z][A-Z]CENTURY)|'
                                        r'\d+(-)\d+(AD|BC|A.D.|B.C.)|'
                                        r'\d+(AD|BC)-\d+(AD|BC)')
     # print val, contains_epoch_with_hyp.search(val).group()
@@ -426,7 +450,8 @@ def is_reverse_chronology(date_string):
 
 def calculate_year_multiplier(date_string):
     million = re.search('MILLION|M\.', date_string)
-    century = re.search('CENT$| C. $| C $|C$|CENTURY$', date_string)
+    # century = re.search('CENT$| C. $| C $|C$|CENTURY$', date_string)
+    century = re.search('CENT$| C. $|CENTURY', date_string)
     if million:
         return 1000000
     elif century:
@@ -442,13 +467,17 @@ def parse_ranges(date_string):
     """Split date ranges based on: (-,;,and,to)"""
     # print date_string
     start, end = re.split('-|;|\sAND\s|\sTO\s', date_string)
-    # start=re.sub(r'\D+','',start)
-    # end=re.sub(r'\D+','',end)
+
+    start=re.sub(r'\D+','',start)
+    end=re.sub(r'\D+','',end)
     if start=='':
         end='-'+end
         start=end
-    if int(end) < 100:
+    if int(end) < 100 and len(start)!=len(end):
         end = (int(start[:2]) * 100) + int(end)
+
+    if is_bc(date_string):
+        return -int(start), -int(end),'Numeric year range detected in '+date_string
 
     return int(start), int(end),'Numeric year range detected in '+date_string
 
@@ -495,13 +524,16 @@ def adjust_for_quarters(date_string):
     if re.search('2NDQUARTER|SECONDQUARTER', date_string):
         return 25,'Quarter keyword found'
 
+    elif re.search('1STQUARTER|FIRSTQUARTER', date_string):
+        return 0,'Quarter keyword found'
+
     elif re.search('3RDQUARTER|THIRDQUARTER', date_string):
         return 50,'Quarter keyword found'
     elif re.search('4THQUARTER|FOURTHQUARTER', date_string):
         return 75,'Quarter keyword found'
     elif re.search('1STHALF|FIRSTHALF', date_string):
         return 0,'HALF keyword found'
-    elif re.search('2NDHALF|SECONGHALF', date_string):
+    elif re.search('2NDHALF|SECONDHALF', date_string):
         return 50,'HALF keyword found'
     else:
         return 0,''
