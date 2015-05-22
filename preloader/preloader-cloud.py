@@ -246,9 +246,9 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
                         if term_match!=False and len(term_match)<2:
 
                             result_dict[row[id_column]]['query_term']=row[validate_column]
-                            result_dict[row[id_column]]['artstor_country']=country_term_dict[term_match]['artstor_term']
+                            result_dict[row[id_column]]['artstor_country']=country_term_dict[term_match[0]]['artstor_term']
 
-                            result_dict[row[id_column]]['tgn_id']=country_term_dict[term_match]['tgn_id']
+                            result_dict[row[id_column]]['tgn_id']=country_term_dict[term_match[0]]['tgn_id']
 
                             result_dict[row[id_column]]['status']='Matched'
 
@@ -308,8 +308,8 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
                         term_match=find_term_match(qv.lower().strip(),class_term_dict.keys(),category)
                         if term_match!=False and len(term_match)<2:
                             result_dict[row[id_column]]['query_term']=' '.join(query_val)
-                            result_dict[row[id_column]]['keyword']=term_match
-                            result_dict[row[id_column]]['artstor_classification']=class_term_dict[term_match]['artstor_term']
+                            result_dict[row[id_column]]['keyword']=term_match[0]
+                            result_dict[row[id_column]]['artstor_classification']=class_term_dict[term_match[0]]['artstor_term']
                             result_dict[row[id_column]]['status']='Matched'
                             sm=1
                             break
