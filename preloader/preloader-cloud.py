@@ -3,6 +3,7 @@ from cherrypy.lib import static
 import os
 from dateutil.parser import parser
 from date_parser_v2 import start_date_parse
+from date_parser_v2 import parse_date
 import csv
 import simplejson
 import os
@@ -363,11 +364,17 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
 
                 if query_term.strip()!='':
                     try:
-                        result=start_date_parse(query_term.strip())
-                        ed=re.sub('\(|\)|\'','',result.split(',')[0])
-                        ld=re.sub('\(|\)|\'','',result.split(',')[1])
-                        logic=",".join(result.split(',')[2:])
-                        logic=re.sub("'|\(|\)",'',logic)
+                        print "query_term",query_term
+                        # result=start_date_parse(query_term.strip())
+                        result=parse_date(query_term,False,'')
+                        print "query_term",query_term,result
+                        # ed=re.sub('\(|\)|\'','',result.split(',')[0])
+                        # ld=re.sub('\(|\)|\'','',result.split(',')[1])
+                        ed=result[0]
+                        ld=result[1]
+                        # logic=",".join(result.split(',')[2:])
+                        # logic=re.sub("'|\(|\)",'',logic)
+                        logic=''
                         if ed!='' and ld!='':
                             result_dict[row[id_column]]['status']='Converted'
                             result_dict[row[id_column]]['query_term']=query_term
