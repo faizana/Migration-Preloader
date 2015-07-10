@@ -193,8 +193,11 @@ def generate_country_dict(csv_dict):
 def find_term_match(val,val_arr,category):
     terms=[]
     for vals in val_arr:
-        if bool(re.search(r'\b'+vals.lower()+r'\b',val.lower())):
-            terms.append(vals)
+        try:
+          if bool(re.search(r'\b'+vals.lower()+r'\b',val.lower())):
+              terms.append(vals)
+        except:
+          print vals,val
     if len(terms)==0:
         terms=False
     return terms
