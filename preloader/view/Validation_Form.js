@@ -36,9 +36,9 @@ var upload_form=Ext.create('Ext.form.Panel', {
         vertical: true,
         items: [
             { boxLabel: 'Artstor Country', name: 'category', inputValue: 'Country' , checked: true},
-            { boxLabel: 'Artstor Classification', name: 'category', inputValue: 'Classification'}
-			//{ boxLabel: 'Artstor Date', name: 'category', inputValue: 'Date'}
-            
+            { boxLabel: 'Artstor Classification', name: 'category', inputValue: 'Classification'},
+			{ boxLabel: 'Artstor Date', name: 'category', inputValue: 'Date'}
+
         ],
         listeners:{
             'change':function(combo, newValue, oldValue, eOpts ){
@@ -101,6 +101,7 @@ var upload_form=Ext.create('Ext.form.Panel', {
 
                        
 
+
                     },
                     failure: function(form, action) {
                         console.log(action)
@@ -117,7 +118,7 @@ var upload_form=Ext.create('Ext.form.Panel', {
         Ext.destroy(Ext.get('downloadIframe'));
 }
             catch(e) {
-  // who you gonna call?  
+  // who you gonna call?
 }
       
 Ext.DomHelper.append(document.body, {
@@ -144,9 +145,9 @@ Ext.DomHelper.append(document.body, {
                 }
 }
             catch(e) {
-  // who you gonna call?  
+  // who you gonna call?
 }
-      
+
 Ext.DomHelper.append(document.body, {
   tag: 'iframe',
   id:'downloadcsvIframe',
@@ -156,7 +157,7 @@ Ext.DomHelper.append(document.body, {
   css: 'display:none;visibility:hidden;height: 0px;',
   src: download_csv_url
 });
-            
+
         }
     }],
     //renderTo: Ext.getBody()
@@ -188,7 +189,7 @@ Ext.Ajax.request({
                 else if (data['data'][i][1]['status']=='Not Matched'){
                     unmatched+=1;
                 }
-				
+
             else{
                     emptyVals+=1;
             }
@@ -228,13 +229,14 @@ Ext.Ajax.request({
 
             }
         if (category=='Country'){
-			
+
 			pct=((matched+unmatched+emptyVals)/total)*100
-			statusString=' Countries Matched: '+addCommas(matched)+';\n Countries Unmatched: '+addCommas(unmatched)+';\n Empty Source Values : '+ addCommas(emptyVals)+';\n Total Source Values: '+addCommas(total)+' \n '+pct.toFixed(2)+'% Complete'	
-			
-			
-			
-           
+			statusString=' Countries Matched: '+addCommas(matched)+';\n Countries Unmatched: '+addCommas(unmatched)+';\n Empty Source Values : '+ addCommas(emptyVals)+';\n Total Source Values: '+addCommas(total)+' \n '+pct.toFixed(2)+'% Complete'
+
+
+
+
+
         }
         else {
 			pct=((matched+unmatched+emptyVals)/total)*100
@@ -283,7 +285,7 @@ Ext.Ajax.request({
 		        statusArea.setRawValue(statusString)
 		        getStatus(csv_ref)
 			}
-			
+
 			else if (data['code']=='COMPLETED' || data['code']=='QUEUE-EMPTY'){
 				download_url=data['result_file_url']
 		        download_csv_url=data['result_csv_url']
@@ -298,7 +300,7 @@ Ext.Ajax.request({
 			
 			
 		}
-        
+
     }
 });
 }
