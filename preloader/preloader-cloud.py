@@ -1,6 +1,3 @@
-import cherrypy
-from cherrypy.lib import static
-import os
 from dateutil.parser import parser
 from date_parser_v2 import start_date_parse
 from date_parser_v2 import parse_date
@@ -44,7 +41,8 @@ def get_artstor_country_list(request):
             try:
                 json_row.append(dict(countryName=row['Source Geography Term'].decode('utf-8').strip(),region1=row['Artstor Geography Term'].decode('utf-8').strip(),tgn_id=row['TGN ID'].decode('utf-8').strip()))
             except:
-                print row['Source Geography Term'],row['TGN ID'],row['Artstor Geography Term']
+                pass
+               # print row['Source Geography Term'],row['TGN ID'],row['Artstor Geography Term']
 
         response=simplejson.dumps(dict(countrydata=json_row,total=len(json_row)))
         return Response(response)
@@ -59,7 +57,8 @@ def get_artstor_class_list(request):
             try:
                 json_row.append(dict(countryName=row['Keyword'].decode('utf-8').strip(),region1=row['Artstor Classification Term'].decode('utf-8').strip(),tgn_id=row['AAT ID'].decode('utf-8').strip()))
             except:
-                print row['Keyword'],row['TGN ID'],row['Artstor Classification Term']
+                pass
+               # print row['Keyword'],row['TGN ID'],row['Artstor Classification Term']
 
         response=simplejson.dumps(dict(countrydata=json_row,total=len(json_row)))
         return Response(response)
@@ -67,6 +66,8 @@ def get_artstor_class_list(request):
 @view_config(route_name='upload_csv', renderer='json')
 def upload_csv(request):
         global active_keys
+        
+        #print "Upload start"
         filename=request.POST['csvFile'].filename
         input_file = request.POST['csvFile'].file
         input_file.seek(0)
@@ -367,10 +368,10 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
 
                 if query_term.strip()!='':
                     try:
-                        print "query_term",query_term
+                        #print "query_term",query_term
                         # result=start_date_parse(query_term.strip())
                         result=parse_date(query_term,False,'')
-                        print "query_term",query_term,result
+                        #print "query_term",query_term,result
                         # ed=re.sub('\(|\)|\'','',result.split(',')[0])
                         # ld=re.sub('\(|\)|\'','',result.split(',')[1])
                         ed=result[0]
@@ -391,7 +392,7 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
                             result_dict[row[id_column]]['Latest Date']=ld
                             result_dict[row[id_column]]['Logic']=logic
                     except :
-                        print 'Exception'
+                        #print 'Exception'
                         traceback.print_exc(file=sys.stdout)
                         result_dict[row[id_column]]['status']='Exception'
                         result_dict[row[id_column]]['query_term']=query_term
