@@ -441,9 +441,11 @@ def is_range(date_string):
 def parse_ranges(date_string):
     """Split date ranges based on: (-,;,and,to)"""
     # print date_string
-    start, end = re.split('-|;|\sAND\s|\sTO\s', date_string)
-    # start=re.sub(r'\D+','',start)
-    # end=re.sub(r'\D+','',end)
+    # start, end = re.split('-|;|\sAND\s|\sTO\s', date_string)
+    terms = re.split('-|;|\sAND\s|\sTO\s|,', date_string)
+    terms=[re.sub(r'\D+','',x) for x in terms]
+    start=terms[0]
+    end=terms[-1]
     if start=='':
         end='-'+end
         start=end
