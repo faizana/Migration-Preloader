@@ -6,57 +6,59 @@ import math
 
 if __name__ == "__main__":
     scenarios=[
-                "1920 (Taish_ 9), May",\
-                    "first quarter of the 18th century",\
-                    "mid-18th century or later",\
-                    "Late 16th-17th century or later",\
-                "late 1790s (mid Kansei era)",\
-                    "A.D. 90-96",\
-                      "1st half of the 1st century A.D.",\
-                      "1st or 2nd century A.D.",\
-                    "14th century (?)",\
-                "1627 (Kan'ei 4)",\
-                    "Early 1st century A.D.",\
-                    "3rd century A.D.",\
-                    "Second half of the 7th century A.D.",\
-                    "Late 3rd or early 4th century A.D.",\
-                    "about 600 B.C.",\
-                    "1400 B.C.",\
-                    "about 50 B.C.",\
-                    "Late 5th-early 4th century B.C.",\
-                    "2nd or 3rd century A.D.",\
-                    "Late 1st century B.C. or early 1st century A.D.",\
-                    "end of the 16th or early 17th century",\
-                "early 1770s",\
-                "designed 1945-46, made 1946-47",\
-                "datable to 1110s",\
-                    "about mid-1st century A.D.",\
-                    "Mid-to late 1st century B.C.",\
-                "mid-1860s",\
-                "mid 1830s",\
-                "about 30 B.C.-A.D. 70",\
-                    "about 40-20 B.C.",\
-                    "about 3rd century A.D.",\
-                    "late 1st century B.C. or 1st century A.D.",\
-                    "second half of the 11th century",\
-                    "19th century, style of Charles II",\
-                    "A.D. 14-37",\
-                    "3rd to early 4th century A.D.",\
-                    "11th century, with 12th century repairs",\
-                    "datable to the 1160s",\
-                "1715 (Sh_toku 5), 1st month",\
-                    "1st century B.C. or 1st century A.D.",\
-                    "first quarter of the 16th century",\
-                    "late 7th, early 8th century",\
-                    "20th century model of 17th century dwelling",\
-                    "June 24, 1939",\
-                    "Original construction in the 13th or 14th century; Damaged in the 17th century and rebuilt in the last quarter of the 17th century.",\
-                    "1/15/1938",\
-                    "about 1903-08",\
-                    "11.12.1868",\
-                    "1860s-70s",\
-                    "October 21, 1999 - January 21, 2000",\
-                    "Drawn and etched about 1815-1816"
+                # "1920 (Taish_ 9), May",\
+                #     "first quarter of the 18th century",\
+                #     "mid-18th century or later",\
+                #     "Late 16th-17th century or later",\
+                # "late 1790s (mid Kansei era)",\
+                #     "A.D. 90-96",\
+                #       "1st half of the 1st century A.D.",\
+                #       "1st or 2nd century A.D.",\
+                #     "14th century (?)",\
+                # "1627 (Kan'ei 4)",\
+                #     "Early 1st century A.D.",\
+                #     "3rd century A.D.",\
+                #     "Second half of the 7th century A.D.",\
+                #     "Late 3rd or early 4th century A.D.",\
+                #     "about 600 B.C.",\
+                #     "1400 B.C.",\
+                #     "about 50 B.C.",\
+                #     "Late 5th-early 4th century B.C.",\
+                #     "2nd or 3rd century A.D.",\
+                #     "Late 1st century B.C. or early 1st century A.D.",\
+                #     "end of the 16th or early 17th century",\
+                # "early 1770s",\
+                # "designed 1945-46, made 1946-47",\
+                # "datable to 1110s",\
+                #     "about mid-1st century A.D.",\
+                #     "Mid-to late 1st century B.C.",\
+                # "mid-1860s",\
+                # "mid 1830s",\
+                # "about 30 B.C.-A.D. 70",\
+                #     "about 40-20 B.C.",\
+                #     "about 3rd century A.D.",\
+                #     "late 1st century B.C. or 1st century A.D.",\
+                #     "second half of the 11th century",\
+                #     "19th century, style of Charles II",\
+                #     "A.D. 14-37",\
+                #     "3rd to early 4th century A.D.",\
+                #     "11th century, with 12th century repairs",\
+                #     "datable to the 1160s",\
+                # "1715 (Sh_toku 5), 1st month",\
+                #     "1st century B.C. or 1st century A.D.",\
+                #     "first quarter of the 16th century",\
+                #     "late 7th, early 8th century",\
+                #     "20th century model of 17th century dwelling",\
+                #     "June 24, 1939",\
+                #     "Original construction in the 13th or 14th century; Damaged in the 17th century and rebuilt in the last quarter of the 17th century.",\
+                #     "1/15/1938",\
+                #     "about 1903-08",\
+                #     "11.12.1868",\
+                #     "1860s-70s",\
+                #     "October 21, 1999 - January 21, 2000",\
+                #     # "Drawn and etched about 1815-1816"
+                #       "1225-1399 , 1479 CE",\
+                #        "1496-97 CE"
 
     ]
 
@@ -179,7 +181,7 @@ def parse_date(original_string,recursive,era):
             ld=int(re.sub('\(|\)|\'','',result.split(',')[1]).strip())
             return ed,ld
         if '' in check_for_simple:
-            contains_epoch=bool(re.search(r'CENTURY|\bC.\b',capitalized_string))
+            contains_epoch=bool(re.search(r'CENTURY',capitalized_string))
             split_terms=re.split(r'-|\bTO\b|\bAND\b|\bOR\b|/|,|\(.+\)',capitalized_string)
             # contains_non_digits=[ True for x in split_terms if bool(re.search('\D+',x))==True ]
             edld=[]
@@ -255,7 +257,7 @@ def parse_date(original_string,recursive,era):
         if '' in check_for_simple:
             contains_digits=bool(re.search(r'\d+',capitalized_string))
             if contains_digits:
-                contains_epoch=bool(re.search(r'CENTURY|\bC.\b',capitalized_string))
+                contains_epoch=bool(re.search(r'CENTURY',capitalized_string))
                 contains_special_words=bool(re.search(r'\bEARLY\b|\bMID\b|\bEND\b|\bSTART\b|\bBEGINNING\b|\bLATE\b|\bQUARTER\b|\bHALF\b',capitalized_string))
                 contains_s=bool(re.search(r'\b\d+S\b',capitalized_string))
                 if contains_epoch and not contains_special_words and not contains_s:
