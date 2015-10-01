@@ -306,6 +306,11 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
             c+=1
             sm=0
             if validate_column in [x.strip() for x in row.keys()]:
+                try:
+                    row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
+                except:
+                    row[validate_column]=row[validate_column].decode('latin-1')
+                    row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
                 query_val=row[validate_column].split(',')
                 for qv in query_val:
                     # print qv.strip(),class_term_dict.keys()
@@ -427,117 +432,7 @@ def generate_class_dict(csv_dict):
         class_term_dict[row['Keyword'].lower()]=dict(artstor_term=row['Artstor Classification Term'])
     return class_term_dict
 
-# class preloader_interface(object):
 
-    # def run_simple_date_parser(self,date_string):
-    #     print date_string
-    #     date_string=str(date_string)
-    #     result=start_date_parse(date_string)
-    #     return result
-    # run_simple_date_parser.exposed=True
-
-
-
-
-    # get_artstor_country_list.exposed=True
-
-
-
-    # get_artstor_class_list.exposed=True
-
-
-    # def upload_csv(self,csvFile,category,validate_column,id_column):
-    #     global active_keys
-    #     out = """<html>
-    #     <body>
-    #         zipFile length: %s<br />
-    #         zipFile filename: %s<br />
-    #         zipFile mime-type: %s <br />
-
-    #     </body>
-    #     </html>"""
-
-    #     # Although this just counts the file length, it demonstrates
-    #     # how to read large files in chunks instead of all at once.
-    #     # CherryPy reads the uploaded file into a temporary file;
-    #     # myFile.file.read reads from that.
-    #     size_csv = 0
-    #     csv_data=''
-
-    #     while True:
-    #         data_zip= csvFile.file.read(8192)
-
-
-    #         if not data_zip:
-    #             break
-    #         csv_data+=data_zip
-    #         size_csv += len(data_zip)
-
-    #         # print 'Success',size_xlsx
-    #     # xsltFile,xlsxFile=unzip_files(zip_data)
-    #     csv_file,csv_ref=self.save_csv(csv_data)
-    #     # csv_path=os.path.abspath(csv_file)
-    #     csv_ref=csv_ref.replace('.csv','')
-    #     print 'key: ',csv_ref
-    #     # print 'input_xlsx',xlsxFile,xsltFile
-    #     # json_resp=simplejson.dumps(xls_to_dict(xlsxFile,xsltFile,username,password,newtransaction))
-
-    #     global_status[csv_ref]={}
-    #     global_status[csv_ref]['csv_path']=csv_file
-    #     global_status[csv_ref]['total_rows']=self.get_total_rows(csv_file)
-    #     active_keys.append(csv_ref)
-    #     conversion_queue.put(global_status)
-    #     # clear_queue()
-
-
-    #     mapping_proc=Process(target = self.start_validation , args = (conversion_queue,process_queue,csv_ref,category,validate_column,id_column,geography_map,classification_map))
-    #     mapping_proc.start()
-    #     # mapping_proc.join()
-    #     return simplejson.dumps(dict(success=True,message="Validation successfully started for "+csvFile.filename,csv_ref=csv_ref))
-    # upload_csv.exposed = True
-
-    # def get_mapping_status(self,csv_ref):
-    #     global global_status
-    #     global active_keys
-
-    #     # print '\n mapping:',simplejson.dumps(process_queue.get()),process_queue.empty()
-    #     if process_queue.empty()==False:
-    #         mapping_status=process_queue.get()
-    #         if csv_ref in mapping_status.keys():
-    #             return return_resp(mapping_status,csv_ref)
-    #             # data_obj=convert_dict_to_list(mapping_status[csv_ref]['result'])
-    #             # if len(mapping_status[csv_ref]['result'].keys())<global_status[csv_ref]['total_rows']-1:
-    #             #     return simplejson.dumps(dict(data=data_obj,count=len(mapping_status[csv_ref]['result'].keys()),total=int(global_status[csv_ref]['total_rows'])-1,code='IN-PROGRESS'))
-    #             # else:
-    #             #     active_keys.remove(csv_ref)
-    #             #     return simplejson.dumps(dict(data=data_obj,count=len(mapping_status[csv_ref]['result'].keys()),total=int(global_status[csv_ref]['total_rows'])-1,code='COMPLETED'))
-    #         elif csv_ref not in mapping_status.keys() and active_keys.index(csv_ref)==-1:
-    #             response=mapping_status.keys()
-    #             return simplejson.dumps(dict(message='The job you requested could not be found',code='NOT-FOUND',keys=response))
-    #         elif csv_ref not in mapping_status.keys() and active_keys.index(csv_ref)!=-1:
-    #              mapping_status=process_queue.get()
-    #              while csv_ref not in mapping_status.keys():
-    #                 mapping_status=process_queue.get()
-    #              return return_resp(mapping_status,csv_ref)
-
-
-    #     else:
-    #         return simplejson.dumps(dict(message='No jobs in process or completed',code='QUEUE-EMPTY'))
-    # get_mapping_status.exposed=True
-
-    # def download_report(self,csv_ref):
-    #     global result_paths_dict
-    #     path = result_paths_dict[csv_ref]['report']
-    #     return static.serve_file(path, "application/x-download",
-    #                              "attachment", os.path.basename(path))
-    # download_report.exposed = True
-
-    # def download_csv(self,csv_ref):
-    #     global result_paths_dict
-    #     path = result_paths_dict[csv_ref]['csv']
-    #     return static.serve_file(path, "application/x-download",
-    #                              "attachment", os.path.basename(path))
-    # download_csv.exposed = True
 
 
 
@@ -612,7 +507,10 @@ def return_resp(mapping_status,csv_ref):
 
 
     if len(mapping_status[csv_ref]['result'].keys())<global_status[csv_ref]['total_rows']-1:
-        return simplejson.dumps(dict(data=data_obj,count=len(mapping_status[csv_ref]['result'].keys()),total=int(global_status[csv_ref]['total_rows'])-1,code='IN-PROGRESS'))
+        try:
+          return simplejson.dumps(dict(data=data_obj,count=len(mapping_status[csv_ref]['result'].keys()),total=int(global_status[csv_ref]['total_rows'])-1,code='IN-PROGRESS'))
+        except:
+          print data_obj
     else:
         result_paths_dict[csv_ref]={}
         active_keys.remove(csv_ref)
@@ -635,7 +533,7 @@ def generate_result_csv(data_obj,csv_ref,category):
         hl=['ID','Query Term','Logic','Status','Artstor Country','TGN ID']
         csv_writer.writerow(hl)
         for vals in data_obj:
-            if vals[1]['status']=='Matched':
+            if 'status' in vals[1].keys() and vals[1]['status']=='Matched':
                 id=vals[0]
                 status=vals[1]['status']
                 ac=vals[1]['artstor_country']
@@ -643,18 +541,26 @@ def generate_result_csv(data_obj,csv_ref,category):
                 tgn_id=vals[1]['tgn_id']
                 logic='An exact match of the term "'+ac+'" was found in the query term string'
             else:
-                id=vals[0]
-                status=vals[1]['status']
-                ac=''
-                qt=vals[1]['query_term']
-                tgn_id=''
-                logic=''
+                if 'status' in vals[1].keys():
+                  id=vals[0]
+                  status=vals[1]['status']
+                  ac=''
+                  qt=vals[1]['query_term']
+                  tgn_id=''
+                  logic=''
+                else:
+                  id=vals[0]
+                  status=''
+                  ac=''
+                  qt=''
+                  tgn_id=''
+                  logic=''
             csv_writer.writerow([id,qt,logic,status,ac,tgn_id])
     elif category=='Classification':
         hl=['ID','Query Term','Logic','Status','Artstor Classification']
         csv_writer.writerow(hl)
         for vals in data_obj:
-            if vals[1]['status']=='Matched':
+            if 'status' in vals[1].keys() and vals[1]['status']=='Matched':
                 id=vals[0]
                 status=vals[1]['status']
                 ac=vals[1]['artstor_classification']
@@ -662,18 +568,26 @@ def generate_result_csv(data_obj,csv_ref,category):
                 qv=vals[1]['keyword']
                 logic='The keyword "'+qv+'" maps directly to the term "'+ac+'"'
             else:
-                id=vals[0]
-                status=vals[1]['status']
-                ac=''
-                qt=vals[1]['query_term']
-                logic=''
+                if 'status' in vals[1].keys():
+                    id=vals[0]
+                    status=vals[1]['status']
+                    ac=''
+                    qt=vals[1]['query_term']
+                    logic=''
+                else:
+                    id=vals[0]
+                    status=''
+                    ac=''
+                    qt=''
+                    logic=''
+
 
             csv_writer.writerow([id,qt,logic,status,ac])
     else:
         hl=['ID','Query Term','Logic','Status','Earliest Date','Latest Date']
         csv_writer.writerow(hl)
         for vals in data_obj:
-            if vals[1]['status']=='Converted':
+            if 'status' in vals[1].keys() and vals[1]['status']=='Converted':
                 id=vals[0]
                 status=vals[1]['status']
                 ed=vals[1]['Earliest Date']
@@ -681,12 +595,21 @@ def generate_result_csv(data_obj,csv_ref,category):
                 qt=vals[1]['query_term']
                 logic=vals[1]['Logic']
             else:
-                id=vals[0]
-                status=vals[1]['status']
-                ed=''
-                ld=''
-                qt=vals[1]['query_term']
-                logic=vals[1]['Logic']
+                if 'status' in vals[1].keys():
+                    id=vals[0]
+                    status=vals[1]['status']
+                    ed=''
+                    ld=''
+                    qt=vals[1]['query_term']
+                    logic=vals[1]['Logic']
+                else:
+                    id=vals[0]
+                    status=''
+                    ed=''
+                    ld=''
+                    qt=''
+                    logic=''
+
             csv_writer.writerow([id,qt,logic,status,ed,ld])
 
 
