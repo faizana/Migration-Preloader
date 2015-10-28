@@ -74,6 +74,7 @@ var upload_form=Ext.create('Ext.form.Panel', {
             ],
         
 
+
     // Reset and Submit buttons
     buttons: [{
         text: 'Reset',
@@ -99,7 +100,7 @@ var upload_form=Ext.create('Ext.form.Panel', {
 					   Ext.getBody().mask('<div style="border-style:none;" class="x-mask-loading"><div style="border-style:none;">Processing</div></div>');
                        Ext.Function.defer(getStatus, 2000, this, [csv_ref]);
 
-                       
+
 
 
                     },
@@ -120,7 +121,7 @@ var upload_form=Ext.create('Ext.form.Panel', {
             catch(e) {
   // who you gonna call?
 }
-      
+
 Ext.DomHelper.append(document.body, {
   tag: 'iframe',
   id:'downloadIframe',
@@ -130,7 +131,7 @@ Ext.DomHelper.append(document.body, {
   css: 'display:none;visibility:hidden;height: 0px;',
   src: download_url
 });
-            
+
         }
     },{
         text: 'Download Converted CSV',
@@ -185,7 +186,7 @@ Ext.Ajax.request({
                 if (data['data'][i][1]['status']=='Matched'){
                     matched+=1;
                 }
-                
+
                 else if (data['data'][i][1]['status']=='Not Matched'){
                     unmatched+=1;
                 }
@@ -209,7 +210,7 @@ Ext.Ajax.request({
 		statusArea.setFieldStyle('font-weight:normal;color:black;')
         statusArea.setRawValue(statusString)
         getStatus(csv_ref)
-            
+
         }
 
         else if (data['code']=='COMPLETED' || data['code']=='QUEUE-EMPTY'){
@@ -218,7 +219,7 @@ Ext.Ajax.request({
                 if (data['data'][i][1]['status']=='Matched'){
                     matched+=1;
                 }
-                
+
                 else if (data['data'][i][1]['status']=='Not Matched'){
                     unmatched+=1;
                 }
@@ -230,8 +231,8 @@ Ext.Ajax.request({
             }
         if (category=='Country'){
 
-			pct=((matched+unmatched+emptyVals)/total)*100
-			statusString=' Countries Matched: '+addCommas(matched)+';\n Countries Unmatched: '+addCommas(unmatched)+';\n Empty Source Values : '+ addCommas(emptyVals)+';\n Total Source Values: '+addCommas(total)+' \n '+pct.toFixed(2)+'% Complete'
+                        pct=((matched+unmatched+emptyVals)/total)*100
+                        statusString=' Countries Matched: '+addCommas(matched)+';\n Countries Unmatched: '+addCommas(unmatched)+';\n Empty Source Values : '+ addCommas(emptyVals)+';\n Total Source Values: '+addCommas(total)+' \n '+pct.toFixed(2)+'% Complete'
 
 
 
@@ -239,67 +240,76 @@ Ext.Ajax.request({
 
         }
         else {
-			pct=((matched+unmatched+emptyVals)/total)*100
-			statusString=' Classifications Matched: '+addCommas(matched)+';\n Classifications Unmatched: '+addCommas(unmatched)+';\n Empty Source Values : '+ addCommas(emptyVals)+';\n Total Source Values: '+addCommas(total)+' \n '+pct.toFixed(2)+'% Complete'
-            
+                        pct=((matched+unmatched+emptyVals)/total)*100
+                        statusString=' Classifications Matched: '+addCommas(matched)+';\n Classifications Unmatched: '+addCommas(unmatched)+';\n Empty Source Values : '+ addCommas(emptyVals)+';\n Total Source Values: '+addCommas(total)+' \n '+pct.toFixed(2)+'% Complete'
+
         }
         download_url=data['result_file_url']
         download_csv_url=data['result_csv_url']
         Ext.getCmp('reportDownload').enable()
         Ext.getCmp('csvDownload').enable()
         var statusArea=Ext.getCmp('statusArea')
-		pct=((matched+unmatched+emptyVals)/total)*100
-		if (pct==100)
-		statusArea.setFieldStyle('font-weight:bold;color:green;')
-		else
-		statusArea.setFieldStyle('font-weight:bold;color:red;')
+                pct=((matched+unmatched+emptyVals)/total)*100
+                if (pct==100)
+                statusArea.setFieldStyle('font-weight:bold;color:green;')
+                else
+                statusArea.setFieldStyle('font-weight:bold;color:red;')
         statusArea.setRawValue(statusString)
-        
+
+        }
+        else if (data['code']=='ERROR-COLUMN' ){
+            Ext.Msg.alert('Error','The entered ID or Validate Column/s could not be found, check for case sensitivity and whitespaces.');
+            return;
         }
         // Ext.getCmp('statusArea').setRawValue
         // process server response here
-		}
-		else{
-			var statusString=''
-			var converted=0
-			var exceptions=0;
-	        var emptyVals=0;
-	        var total=data['total']
-			for (var i=0;i<parseInt(data['count']);i++){
-					if (data['data'][i][1]['status']=='Converted'){
-						converted+=1
-					}
-					else if (data['data'][i][1]['status']=='Exception'){
-						exceptions+=1
-					}
-					else{
-						emptyVals+=1
-					}
-				}
-			pct=((converted+exceptions+emptyVals)/total)*100
+                }
+                else{
+                        var statusString=''
+                        var converted=0
+                        var exceptions=0;
+                var emptyVals=0;
+                var total=data['total']
+                        for (var i=0;i<parseInt(data['count']);i++){
+                                        if (data['data'][i][1]['status']=='Converted'){
+                                                converted+=1
+                                        }
+                                        else if (data['data'][i][1]['status']=='Exception'){
+                                                exceptions+=1
+                                        }
+                                        else{
+                                                emptyVals+=1
+                                        }
+                                }
+                        pct=((converted+exceptions+emptyVals)/total)*100
             statusString=' Dates Parsed: '+addCommas(converted)+';\n Parsing Exceptions: '+addCommas(exceptions)+'\n Empty Source Values : '+ addCommas(emptyVals)+';\n Total Source Values:'+addCommas(total)+' \n '+pct.toFixed(2)+'% Complete'
-			var statusArea=Ext.getCmp('statusArea')
-			if (data['code']=='IN-PROGRESS'){
-				
-				statusArea.setFieldStyle('font-weight:normal;color:black;')
-		        statusArea.setRawValue(statusString)
-		        getStatus(csv_ref)
-			}
+                        var statusArea=Ext.getCmp('statusArea')
+                        if (data['code']=='IN-PROGRESS'){
 
-			else if (data['code']=='COMPLETED' || data['code']=='QUEUE-EMPTY'){
-				download_url=data['result_file_url']
-		        download_csv_url=data['result_csv_url']
-		        Ext.getCmp('reportDownload').enable()
-		        Ext.getCmp('csvDownload').enable()
-				if (pct==100)
-				statusArea.setFieldStyle('font-weight:bold;color:green;')
-				else
-				statusArea.setFieldStyle('font-weight:bold;color:red;')
-				statusArea.setRawValue(statusString)
-			}
-			
-			
-		}
+                                statusArea.setFieldStyle('font-weight:normal;color:black;')
+                        statusArea.setRawValue(statusString)
+                        getStatus(csv_ref)
+                        }
+
+                        else if (data['code']=='COMPLETED' || data['code']=='QUEUE-EMPTY'){
+                                download_url=data['result_file_url']
+                        download_csv_url=data['result_csv_url']
+                        Ext.getCmp('reportDownload').enable()
+                        Ext.getCmp('csvDownload').enable()
+                                if (pct==100)
+                                statusArea.setFieldStyle('font-weight:bold;color:green;')
+                                else
+                                statusArea.setFieldStyle('font-weight:bold;color:red;')
+                                statusArea.setRawValue(statusString)
+                        }
+
+                         else if (data['code']=='ERROR-COLUMN' ){
+                Ext.Msg.alert('Error','The entered ID or Validate Column/s could not be found, check for case sensitivity and whitespaces.');
+                return;
+        }
+
+
+                }
 
     }
 });
