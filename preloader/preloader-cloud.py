@@ -221,8 +221,9 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
         country_term_dict,country_id_dict=generate_country_dict(geography_map)
         c=0
         mapping_status[csv_ref]={}
-        if id_column in row.keys() and validate_column in row.keys():
-            for row in csv_dict:
+
+        for row in csv_dict:
+            if id_column in row.keys() and validate_column in row.keys():
                 result_dict[row[id_column]]={}
                 c+=1
                 sm=0
@@ -301,19 +302,22 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
                     mapping_status[csv_ref]['category']=category
                     mapping_status[csv_ref]['converted_csv']=False
                     process_queue.put(mapping_status)
-        else:
-                    mapping_status[csv_ref]['result']={}
-                    mapping_status[csv_ref]['category']=category
-                    mapping_status[csv_ref]['converted_csv']=False
-                    process_queue.put(mapping_status)
+            else:
+                        mapping_status[csv_ref]['result']={}
+                        mapping_status[csv_ref]['category']=category
+                        mapping_status[csv_ref]['converted_csv']=False
+                        process_queue.put(mapping_status)
+                        result_dict['error']='error'
+                        break
     elif category=='Classification':
         classification_map=open(classification_map,'rU')
         classification_map=csv.DictReader(classification_map,delimiter=',',dialect=csv.excel_tab)
         class_term_dict=generate_class_dict(classification_map)
         c=0
         mapping_status[csv_ref]={}
-        if id_column in row.keys() and validate_column in row.keys():
-            for row in csv_dict:
+
+        for row in csv_dict:
+            if id_column in row.keys() and validate_column in row.keys():
                 result_dict[row[id_column]]={}
                 c+=1
                 sm=0
@@ -369,17 +373,21 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
                     mapping_status[csv_ref]['category']=category
                     mapping_status[csv_ref]['converted_csv']=False
                     process_queue.put(mapping_status)
-        else:
-                    mapping_status[csv_ref]['result']={}
-                    mapping_status[csv_ref]['category']=category
-                    mapping_status[csv_ref]['converted_csv']=False
-                    process_queue.put(mapping_status)
+            else:
+                        mapping_status[csv_ref]['result']={}
+                        mapping_status[csv_ref]['category']=category
+                        mapping_status[csv_ref]['converted_csv']=False
+                        process_queue.put(mapping_status)
+                        result_dict['error']='error'
+                        break
 
     elif category=='Date':
         c=0
         mapping_status[csv_ref]={}
-        if id_column in row.keys() and validate_column in row.keys():
-            for row in csv_dict:
+
+        for row in csv_dict:
+            if id_column in row.keys() and validate_column in row.keys():
+
                 result_dict[row[id_column]]={}
                 c+=1
 
@@ -436,11 +444,13 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
                 else:
                     mapping_status[csv_ref]['converted_csv']=False
                 process_queue.put(mapping_status)
-        else:
-            mapping_status[csv_ref]['result']={}
-            mapping_status[csv_ref]['category']=category
-            mapping_status[csv_ref]['converted_csv']=False
-            process_queue.put(mapping_status)
+            else:
+                mapping_status[csv_ref]['result']={}
+                mapping_status[csv_ref]['category']=category
+                mapping_status[csv_ref]['converted_csv']=False
+                process_queue.put(mapping_status)
+                result_dict['error']='error'
+                break
 
     print 'succesful end of validation',len(result_dict.keys())
 
