@@ -112,7 +112,10 @@ def get_mapping_status(request):
         if process_queue.empty()==False:
             mapping_status=process_queue.get()
             if csv_ref in mapping_status.keys():
-                return Response(return_resp(mapping_status,csv_ref))
+                if mapping_status[csv_ref]['result']!={}:
+                    return Response(return_resp(mapping_status,csv_ref))
+                else:
+                    return Response(simplejson.dumps(dict(message='The ID or Validate Column was not found',code='ERROR-COLUMN')))
                 # data_obj=convert_dict_to_list(mapping_status[csv_ref]['result'])
                 # if len(mapping_status[csv_ref]['result'].keys())<global_status[csv_ref]['total_rows']-1:
                 #     return simplejson.dumps(dict(data=data_obj,count=len(mapping_status[csv_ref]['result'].keys()),total=int(global_status[csv_ref]['total_rows'])-1,code='IN-PROGRESS'))
@@ -127,6 +130,7 @@ def get_mapping_status(request):
                  while csv_ref not in mapping_status.keys():
                     mapping_status=process_queue.get()
                  return Response(return_resp(mapping_status,csv_ref))
+
 
 
         else:
@@ -198,7 +202,8 @@ def find_term_match(val,val_arr,category):
           if bool(re.search(r'\b'+vals.lower()+r'\b',val.lower())):
               terms.append(vals)
         except:
-          print vals,val
+          pass
+          #print vals,val
     if len(terms)==0:
         terms=False
     return terms
@@ -216,155 +221,168 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
         country_term_dict,country_id_dict=generate_country_dict(geography_map)
         c=0
         mapping_status[csv_ref]={}
-        for row in csv_dict:
-            result_dict[row[id_column]]={}
-            c+=1
-            sm=0
-            if validate_column in [x.strip() for x in row.keys()]:
-                try:
-                    row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
-                except:
-                    row[validate_column]=row[validate_column].decode('latin-1')
-                    row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
-                contains_brackets=bool(re.search('[a-z]+\s+\(\D+\)',row[validate_column].strip().lower()))
-                if contains_brackets==True:
-                    query_val=re.sub('\(\D+\)','',row[validate_column])
-                    query_val=query_val.split(',')
-                else:
+        if id_column in row.keys() and validate_column in row.keys():
+            for row in csv_dict:
+                result_dict[row[id_column]]={}
+                c+=1
+                sm=0
+                if validate_column in [x.strip() for x in row.keys()]:
+                    try:
+                        row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
+                    except:
+                        row[validate_column]=row[validate_column].decode('latin-1')
+                        row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
+                    contains_brackets=bool(re.search('[a-z]+\s+\(\D+\)',row[validate_column].strip().lower()))
+                    if contains_brackets==True:
+                        query_val=re.sub('\(\D+\)','',row[validate_column])
+                        query_val=query_val.split(',')
+                    else:
 
-                    query_val=row[validate_column].split(',')
-                for qv in query_val:
+                        query_val=row[validate_column].split(',')
+                    for qv in query_val:
 
-                    # print qv
-                    if qv.strip()!='' and qv.isdigit()==True and qv.strip() in country_id_dict.keys():
-                        result_dict[row[id_column]]['query_term']=row[validate_column]
-                        result_dict[row[id_column]]['artstor_country']=country_id_dict[qv]['artstor_term']
-                        result_dict[row[id_column]]['tgn_id']=qv
-                        result_dict[row[id_column]]['source_term']=country_id_dict[qv]['source_term']
-                        result_dict[row[id_column]]['status']='Matched'
-                        sm=1
-                        break
-                        # continue
-
-                    elif qv.strip()!='' and qv.isdigit()==False:
-                        term_match=find_term_match(qv.lower().strip(),country_term_dict.keys(),category)
-                        if term_match!=False and len(term_match)<2:
-
+                        # print qv
+                        if qv.strip()!='' and qv.isdigit()==True and qv.strip() in country_id_dict.keys():
                             result_dict[row[id_column]]['query_term']=row[validate_column]
-                            result_dict[row[id_column]]['artstor_country']=country_term_dict[term_match[0]]['artstor_term']
-
-                            result_dict[row[id_column]]['tgn_id']=country_term_dict[term_match[0]]['tgn_id']
-
-                            result_dict[row[id_column]]['status']='Matched'
-
-                            sm=1
-                            break
-                        elif term_match!=False and len(term_match)>=2:
-                            result_dict[row[id_column]]['query_term']=row[validate_column]
-                            countries=[]
-                            tgns=[]
-                            for terms in term_match:
-                                countries.append(country_term_dict[terms]['artstor_term'])
-                                tgns.append(country_term_dict[terms]['tgn_id'])
-                            result_dict[row[id_column]]['artstor_country']="|".join(countries)
-                            result_dict[row[id_column]]['tgn_id']="|".join(tgns)
+                            result_dict[row[id_column]]['artstor_country']=country_id_dict[qv]['artstor_term']
+                            result_dict[row[id_column]]['tgn_id']=qv
+                            result_dict[row[id_column]]['source_term']=country_id_dict[qv]['source_term']
                             result_dict[row[id_column]]['status']='Matched'
                             sm=1
                             break
+                            # continue
 
-                        # continue
+                        elif qv.strip()!='' and qv.isdigit()==False:
+                            term_match=find_term_match(qv.lower().strip(),country_term_dict.keys(),category)
+                            if term_match!=False and len(term_match)<2:
 
-                if sm==0 and query_val[0]!='':
-                    result_dict[row[id_column]]['status']='Not Matched'
-                    result_dict[row[id_column]]['query_term']=' '.join(query_val)
-                elif sm==0 and query_val[0]=='':
-                    result_dict[row[id_column]]['status']='null'
-                    result_dict[row[id_column]]['query_term']=''
+                                result_dict[row[id_column]]['query_term']=row[validate_column]
+                                result_dict[row[id_column]]['artstor_country']=country_term_dict[term_match[0]]['artstor_term']
+
+                                result_dict[row[id_column]]['tgn_id']=country_term_dict[term_match[0]]['tgn_id']
+
+                                result_dict[row[id_column]]['status']='Matched'
+
+                                sm=1
+                                break
+                            elif term_match!=False and len(term_match)>=2:
+                                result_dict[row[id_column]]['query_term']=row[validate_column]
+                                countries=[]
+                                tgns=[]
+                                for terms in term_match:
+                                    countries.append(country_term_dict[terms]['artstor_term'])
+                                    tgns.append(country_term_dict[terms]['tgn_id'])
+                                result_dict[row[id_column]]['artstor_country']="|".join(countries)
+                                result_dict[row[id_column]]['tgn_id']="|".join(tgns)
+                                result_dict[row[id_column]]['status']='Matched'
+                                sm=1
+                                break
+
+                            # continue
+
+                    if sm==0 and query_val[0]!='':
+                        result_dict[row[id_column]]['status']='Not Matched'
+                        result_dict[row[id_column]]['query_term']=' '.join(query_val)
+                    elif sm==0 and query_val[0]=='':
+                        result_dict[row[id_column]]['status']='null'
+                        result_dict[row[id_column]]['query_term']=''
 
 
-                # global_status[csv_ref]['result']=result_dict
-                mapping_status[csv_ref]['result']=result_dict
-                mapping_status[csv_ref]['category']=category
-                if 'artstor country' in [x.lower().strip() for x in row.keys() if x is not None]:
-                    mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c)
+                    # global_status[csv_ref]['result']=result_dict
+                    mapping_status[csv_ref]['result']=result_dict
+                    mapping_status[csv_ref]['category']=category
+                    if 'artstor country' in [x.lower().strip() for x in row.keys() if x is not None]:
+                        mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c)
+                    else:
+                        mapping_status[csv_ref]['converted_csv']=False
+                    process_queue.put(mapping_status)
                 else:
+                    mapping_status[csv_ref]['result']={}
+                    mapping_status[csv_ref]['category']=category
                     mapping_status[csv_ref]['converted_csv']=False
-                process_queue.put(mapping_status)
-            else:
-                mapping_status[csv_ref]['result']={}
-                mapping_status[csv_ref]['category']=category
-                mapping_status[csv_ref]['converted_csv']=False
-                process_queue.put(mapping_status)
+                    process_queue.put(mapping_status)
+        else:
+                    mapping_status[csv_ref]['result']={}
+                    mapping_status[csv_ref]['category']=category
+                    mapping_status[csv_ref]['converted_csv']=False
+                    process_queue.put(mapping_status)
     elif category=='Classification':
         classification_map=open(classification_map,'rU')
         classification_map=csv.DictReader(classification_map,delimiter=',',dialect=csv.excel_tab)
         class_term_dict=generate_class_dict(classification_map)
         c=0
         mapping_status[csv_ref]={}
-        for row in csv_dict:
-            result_dict[row[id_column]]={}
-            c+=1
-            sm=0
-            if validate_column in [x.strip() for x in row.keys()]:
-                try:
-                    row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
-                except:
-                    row[validate_column]=row[validate_column].decode('latin-1')
-                    row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
-                query_val=row[validate_column].split(',')
-                for qv in query_val:
-                    # print qv.strip(),class_term_dict.keys()
-                    if qv.strip()!='':
-                        term_match=find_term_match(qv.lower().strip(),class_term_dict.keys(),category)
-                        if term_match!=False and len(term_match)<2:
-                            result_dict[row[id_column]]['query_term']=' '.join(query_val)
-                            result_dict[row[id_column]]['keyword']=term_match[0]
-                            result_dict[row[id_column]]['artstor_classification']=class_term_dict[term_match[0]]['artstor_term']
-                            result_dict[row[id_column]]['status']='Matched'
-                            sm=1
-                            break
-                        elif term_match!=False and len(term_match)>=2:
-                            result_dict[row[id_column]]['query_term']=' '.join(query_val)
-                            classes=[]
-                            keywords=[]
-                            for terms in term_match:
-                                classes.append(class_term_dict[terms]['artstor_term'])
-                                keywords.append(terms)
-                            result_dict[row[id_column]]['artstor_classification']="|".join(classes)
-                            result_dict[row[id_column]]['keyword']="|".join(keywords)
-                            result_dict[row[id_column]]['status']='Matched'
-                            sm=1
-                            break
+        if id_column in row.keys() and validate_column in row.keys():
+            for row in csv_dict:
+                result_dict[row[id_column]]={}
+                c+=1
+                sm=0
+                if validate_column in [x.strip() for x in row.keys()]:
+                    try:
+                        row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
+                    except:
+                        row[validate_column]=row[validate_column].decode('latin-1')
+                        row[validate_column]=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
+                    query_val=row[validate_column].split(',')
+                    for qv in query_val:
+                        # print qv.strip(),class_term_dict.keys()
+                        if qv.strip()!='':
+                            term_match=find_term_match(qv.lower().strip(),class_term_dict.keys(),category)
+                            if term_match!=False and len(term_match)<2:
+                                result_dict[row[id_column]]['query_term']=' '.join(query_val)
+                                result_dict[row[id_column]]['keyword']=term_match[0]
+                                result_dict[row[id_column]]['artstor_classification']=class_term_dict[term_match[0]]['artstor_term']
+                                result_dict[row[id_column]]['status']='Matched'
+                                sm=1
+                                break
+                            elif term_match!=False and len(term_match)>=2:
+                                result_dict[row[id_column]]['query_term']=' '.join(query_val)
+                                classes=[]
+                                keywords=[]
+                                for terms in term_match:
+                                    classes.append(class_term_dict[terms]['artstor_term'])
+                                    keywords.append(terms)
+                                result_dict[row[id_column]]['artstor_classification']="|".join(classes)
+                                result_dict[row[id_column]]['keyword']="|".join(keywords)
+                                result_dict[row[id_column]]['status']='Matched'
+                                sm=1
+                                break
 
 
 
-                if sm==0 and query_val[0]!='':
-                    result_dict[row[id_column]]['status']='Not Matched'
-                    result_dict[row[id_column]]['query_term']=' '.join(query_val)
-                elif sm==0 and query_val[0]=='':
-                    result_dict[row[id_column]]['status']='null'
-                    result_dict[row[id_column]]['query_term']=''
+                    if sm==0 and query_val[0]!='':
+                        result_dict[row[id_column]]['status']='Not Matched'
+                        result_dict[row[id_column]]['query_term']=' '.join(query_val)
+                    elif sm==0 and query_val[0]=='':
+                        result_dict[row[id_column]]['status']='null'
+                        result_dict[row[id_column]]['query_term']=''
 
-                mapping_status[csv_ref]['result']=result_dict
-                mapping_status[csv_ref]['category']=category
-                if 'artstor classification' in [x.lower().strip() for x in row.keys() if x is not None]:
-                    mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c)
+                    mapping_status[csv_ref]['result']=result_dict
+                    mapping_status[csv_ref]['category']=category
+                    if 'artstor classification' in [x.lower().strip() for x in row.keys() if x is not None]:
+                        mapping_status[csv_ref]['converted_csv']=write_modified_csv(row,result_dict[row[id_column]],os.path.basename(csv_path),category,c)
+                    else:
+                        mapping_status[csv_ref]['converted_csv']=False
+                    process_queue.put(mapping_status)
                 else:
+                    mapping_status[csv_ref]['result']={}
+                    mapping_status[csv_ref]['category']=category
                     mapping_status[csv_ref]['converted_csv']=False
-                process_queue.put(mapping_status)
-            else:
-                mapping_status[csv_ref]['result']={}
-                mapping_status[csv_ref]['category']=category
-                mapping_status[csv_ref]['converted_csv']=False
-                process_queue.put(mapping_status)
+                    process_queue.put(mapping_status)
+        else:
+                    mapping_status[csv_ref]['result']={}
+                    mapping_status[csv_ref]['category']=category
+                    mapping_status[csv_ref]['converted_csv']=False
+                    process_queue.put(mapping_status)
 
     elif category=='Date':
         c=0
         mapping_status[csv_ref]={}
-        for row in csv_dict:
-            result_dict[row[id_column]]={}
-            c+=1
-            if validate_column in [x.strip() for x in row.keys()]:
+        if id_column in row.keys() and validate_column in row.keys():
+            for row in csv_dict:
+                result_dict[row[id_column]]={}
+                c+=1
+
                 try:
                     query_term=htmlparsetool.unescape(row[validate_column]).encode('utf-8')
                 except:
@@ -418,11 +436,11 @@ def start_validation(conversion_queue,process_queue,csv_ref,category,validate_co
                 else:
                     mapping_status[csv_ref]['converted_csv']=False
                 process_queue.put(mapping_status)
-            else:
-                mapping_status[csv_ref]['result']={}
-                mapping_status[csv_ref]['category']=category
-                mapping_status[csv_ref]['converted_csv']=False
-                process_queue.put(mapping_status)
+        else:
+            mapping_status[csv_ref]['result']={}
+            mapping_status[csv_ref]['category']=category
+            mapping_status[csv_ref]['converted_csv']=False
+            process_queue.put(mapping_status)
 
     print 'succesful end of validation',len(result_dict.keys())
 
