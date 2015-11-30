@@ -6,8 +6,10 @@ import csv
 from dateutil import parser
 
 
+
+
 def remove_syms(date_string):
-    symbols=['?','<','>','DESIGNED','PRINTED','MADE','ABOUT','MANUFACTURED','SPRING-SUMMER','SPRING','SUMMER','AUTUMN','WINTER']
+    symbols=['?','<','>','DESIGNED','MADE','ABOUT','MANUFACTURED','SPRING-SUMMER','SPRING','SUMMER','AUTUMN','WINTER']
 
     for sym in symbols:
         date_string=date_string.replace(sym,'')
@@ -23,7 +25,7 @@ def detect_month_year_conflict(date_string):
     else:
         return False
 
-def parse_date(input_string):
+def parse_date(input_string,era):
     # date_string = input_string.upper().replace(' ','') #remove whitespaces
     date_string = input_string.upper()
     date_string = remove_syms(date_string)
@@ -62,23 +64,64 @@ def parse_date(input_string):
         #
     elif is_range(year_string) and bool(re.search('\D+',year_string.replace('-','')))==False: #and contains_epoch_with_hyp==False and year_string.count('-')<2 and contains_date_with_words_and_hyp==False and contains_s==False:
         # print ' bc yahan q atey hou'
-        return parse_ranges(year_string)
+        return parse_ranges(year_string,era)
     elif is_range(year_string) and bool(re.search('\D+',year_string.replace('-','')))==True:
         # print 'mkc'
-        date_string = input_string.upper().replace(' ','')
+        if input_string.find('-')!=-1:
+            date_string = input_string.upper().replace(' ','')
+        else:
+            date_string=input_string.upper()
         date_string=remove_syms(date_string)
          #remove whitespaces
         if date_string.find('CA.')!=-1:
             date_string=date_string.replace('CA.','')
-            if bool(re.search('(-)\d+(-)',date_string)):
+            crosses_ad_bc=crosses_bc_ad_boundary(date_string)
+            bc_date=is_bc(date_string)
+            if bool(re.search('^(-)\d+(-)$',date_string)):
                 year_string=re.search('(-)\d+',date_string).group()
                 return year_string,year_string
             elif bool(re.search('\d+(-)\d+',date_string)):
                 year_string=date_string.split('-')
-                return year_string[0],year_string[1]
+                if len(year_string[0])==len(year_string[1]):
+                    return year_string[0],year_string[1]
+                else:
+                    dates=re.findall('\d+-\d+|[^\D+]\d+[^\D+]',date_string)
+                    date_list=[]
+                    for date in dates:
+                        # try:
+                        if is_range(date) and bool(re.search('\D+',date.replace('-','')))==False:
+                          d=parse_ranges(date,era)
+                        else:
+                          d=start_date_parse(date)
+                        date_list.append(int(re.sub('\(|\)|\'','',str(d).split(',')[0])))
+                        date_list.append(int(re.sub('\(|\)|\'','',str(d).split(',')[1])))
+                        # except:
+                        #     continue
+                    return min(date_list),max(date_list)
+
             elif bool(re.search('(-)\d+(-)+\d+',date_string)):
-                year_string=re.split('-\d+',date_string)
-                return year_string[0],year_string[1]
+                year_string=re.split('-',date_string)
+                nums_only=[int(x) for x in year_string if bool(re.search('\d+',x))]
+                return -max(nums_only),-min(nums_only)
+            elif bool(re.search('\d+\D+(-)\d+\D+',date_string)):
+                try:
+                    if crosses_ad_bc:
+                        years=date_string.split('-')
+                        bc=re.search('\d+',years[0]).group()
+                        ad=re.search('\d+',years[1]).group()
+                        return -int(bc),ad
+                    elif bc_date:
+                        years=date_string.split('-')
+                        ed=re.search('\d+',years[0]).group()
+                        ld=re.search('\d+',years[1]).group()
+                        return -int(ed),-int(ld)
+                    else:
+                        return int(re.search('\d+',date_string.split('-')[0]).group()),int(re.search('\d+',date_string.split('-')[1]).group())
+                except:
+                    return 'NA','NA'
+
+
+
 
 
 
@@ -135,7 +178,7 @@ def parse_date(input_string):
 
         elif contains_date_with_words_and_hyp:
             if bool(re.search('\D+\d+(-)\d+$',date_string)):
-                res=start_date_parse(re.sub('[A-Z]+','',date_string))
+                res=start_date_parse("-".join(re.findall('\d+',date_string)))
                 res+=', Date found containing words with "-", applied range logic to convert'
                 return res
             elif bool(re.search('^\D+\d+(-)\D+\d+$|^\d+(-)\D+\d+$',date_string)):
@@ -160,7 +203,7 @@ def parse_date(input_string):
             get_exact_string=re.compile(r'[A-Z]+\d+[A-Z][A-Z](CENTURY-)[A-Z]+\d+[A-Z][A-Z](CENTURY)')
             get_exact_string1=re.compile(r'[A-Z]+(-\d+[A-Z][A-Z]CENTURY)|[A-Z]+(-[A-Z]+\d+[A-Z][A-Z]CENTURY)|[A-Z]+(-\d+[A-Z]+\d+[A-Z]+CENTURY)|'
                                          r'([A-Z]+-+)+[A-Z]+\d+\D+CENTURY|\d+(-)\d+AD') #MID-19THCENTURY,MID-TOLATE19THCENTURY
-            is_bc_date=re.compile(r'BC-|-BC|BC$')
+            is_bc_date=re.compile(r'BC-|-BC|BC$|B\.C\.|BCE')
             if bool(get_exact_string.search((year_string))):
                 check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE|END',year_string))
                 if check_for_special_dates==False:
@@ -233,7 +276,7 @@ def parse_date(input_string):
 
         else:
             # logic_string='No specific range format detected, applying simple range parser'
-            return parse_ranges(date_string)
+            return parse_ranges(date_string,era)
 
     elif contains_dots_with_year:
         logic_string='Date with dots detected,parsing to numeric format'
@@ -300,75 +343,91 @@ def parse_date(input_string):
         return int(ed),int(ld),logic_string
 
     else:
-        year =re.sub('\D+', '', year_string)
-        if len(year)>4:
-            ed=year[0:(len(year)/2)]
-            ld=year[(len(year)/2):]
-            return ed,ld,'Found two different dates,assigning to ed/ld'
+        year =re.findall('\d+',year_string)
+        crosses_ad_bc=crosses_bc_ad_boundary(year_string)
+        bc_date=is_bc(year_string)
+        if len(year)>0:
+
+            if crosses_ad_bc:
+                year=[int(x) for x in year]
+                return year[0]*-1,year[-1],'Found two different dates,assigning to ed/ld'
+            elif bc_date:
+                year=[int(x) for x in year]
+                return max(year)*-1,min(year)*-1,'Found two different dates,assigning to ed/ld'
+            else:
+                year=[int(x) for x in year]
+                return min(year),max(year),'Found two different dates,assigning to ed/ld'
+
+
+
+
+
+
         else:
-            year=int(year)
-            year *= calculate_year_multiplier(date_string)
-            if calculate_year_multiplier(date_string) == 100:
-                check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE|END',date_string))
-                quarter,ls=adjust_for_quarters(date_string)
-                logic_string+=ls+' Simple epoch detected in '+year_string
-
-                if check_for_special_dates:
-                    t_ed=[]
-                    t_ld=[]
-                    years=date_string.split(',')
-                    years=[x for x in years if x.strip() is not '']
-                    # print check_for_special_dates,date_string,years
-                    for y in years:
-                        edo,ldo,logic=adjust_for_special_words(y)
-                        t_ed.append(edo)
-                        t_ld.append(ldo)
-                    # print t_ed,t_ld
-                    if len(t_ed)<2 and len(t_ld)<2:
-                        if not is_bc(date_string):
-                            return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[0])),logic_string+' '+logic
-                        else:
-                            return int(((int(year)) * -1)+(100*t_ed[0])), int(((int(year)) * -1)+(100*t_ld[0])),logic_string+' '+logic
-
-                    else:
-                        if t_ed[-1]!=0 and t_ld[-1]!=0:
-                            if not is_bc(date_string):
-                                return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[-1])),logic_string+' '+logic
-                            else:
-                                return int(((int(year)) * -1)+(100*t_ed[0])), int(((int(year)) * -1)+(100*t_ld[-1])),logic_string+' '+logic
-                        else:
-                            if not is_bc(date_string):
-                                return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[0])),logic_string+' '+logic
-                            else:
-                                return int(((int(year)) * -1)+(100*t_ed[0])), int(((int(year)) * -1)+(100*t_ld[0])),logic_string+' '+logic
-                else:
-                    if ls.find('Quarter')!=-1:
-                        return quarter + year - 100, quarter + year - 100+25,logic_string
-                    elif ls.find('HALF')!=-1:
-                        if quarter==0:
-                            return year - 100, year - 50,logic_string
-                        else:
-                            return quarter+year - 100, year - 1,logic_string
-                    else:
-                        if not is_bc(date_string):
-                            return year - 100, year - 1,logic_string
-                        else:
-                            return (int(year)) * -1, (int(year)-99) * -1,logic_string
-
-            elif is_bc(date_string):
-                if date_string.find('MILLION')==-1 and date_string.find('M')==-1 and calculate_year_multiplier(date_string)!=100:
-                    year=re.sub('\D+','',date_string)
-                    logic_string='BC date found,converting to negative numeric format'
-                else:
-                    million_digit=re.sub('\D+','',date_string)
-                    year=int(million_digit)*1000000
-                    logic_string='Million string detected,converting to negative numeric format'
-                # print year,date_string
-                return int(year) * -1, int(year) * -1,logic_string
-            elif is_reverse_chronology(date_string):
-                logic_string='Reverse Chronology format detected, converting to ED/LD'
-                year = datetime.now().year - year
-            return year, year,logic_string
+            return 'NA','NA',''
+            # year=int(year)
+            # year *= calculate_year_multiplier(date_string)
+            # if calculate_year_multiplier(date_string) == 100:
+            #     check_for_special_dates=bool(re.search('BEGINNING|EARLY|MID|LATE|END',date_string))
+            #     quarter,ls=adjust_for_quarters(date_string)
+            #     logic_string+=ls+' Simple epoch detected in '+year_string
+            #
+            #     if check_for_special_dates:
+            #         t_ed=[]
+            #         t_ld=[]
+            #         years=date_string.split(',')
+            #         years=[x for x in years if x.strip() is not '']
+            #         # print check_for_special_dates,date_string,years
+            #         for y in years:
+            #             edo,ldo,logic=adjust_for_special_words(y)
+            #             t_ed.append(edo)
+            #             t_ld.append(ldo)
+            #         # print t_ed,t_ld
+            #         if len(t_ed)<2 and len(t_ld)<2:
+            #             if not is_bc(date_string):
+            #                 return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[0])),logic_string+' '+logic
+            #             else:
+            #                 return int(((int(year)) * -1)+(100*t_ed[0])), int(((int(year)) * -1)+(100*t_ld[0])),logic_string+' '+logic
+            #
+            #         else:
+            #             if t_ed[-1]!=0 and t_ld[-1]!=0:
+            #                 if not is_bc(date_string):
+            #                     return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[-1])),logic_string+' '+logic
+            #                 else:
+            #                     return int(((int(year)) * -1)+(100*t_ed[0])), int(((int(year)) * -1)+(100*t_ld[-1])),logic_string+' '+logic
+            #             else:
+            #                 if not is_bc(date_string):
+            #                     return int((year-100)+(100*t_ed[0])),int((year-100)+(100*t_ld[0])),logic_string+' '+logic
+            #                 else:
+            #                     return int(((int(year)) * -1)+(100*t_ed[0])), int(((int(year)) * -1)+(100*t_ld[0])),logic_string+' '+logic
+            #     else:
+            #         if ls.find('Quarter')!=-1:
+            #             return quarter + year - 100, quarter + year - 100+25,logic_string
+            #         elif ls.find('HALF')!=-1:
+            #             if quarter==0:
+            #                 return year - 100, year - 50,logic_string
+            #             else:
+            #                 return quarter+year - 100, year - 1,logic_string
+            #         else:
+            #             if not is_bc(date_string):
+            #                 return year - 100, year - 1,logic_string
+            #             else:
+            #                 return (int(year)) * -1, (int(year)-99) * -1,logic_string
+            #
+            # elif is_bc(date_string):
+            #     if date_string.find('MILLION')==-1 and date_string.find('M')==-1 and calculate_year_multiplier(date_string)!=100:
+            #         year=re.sub('\D+','',date_string)
+            #         logic_string='BC date found,converting to negative numeric format'
+            #     else:
+            #         million_digit=re.sub('\D+','',date_string)
+            #         year=int(million_digit)*1000000
+            #         logic_string='Million string detected,converting to negative numeric format'
+            #     # print year,date_string
+            #     return int(year) * -1, int(year) * -1,logic_string
+            # elif is_reverse_chronology(date_string):
+            #     logic_string='Reverse Chronology format detected, converting to ED/LD'
+            #     year = datetime.now().year - year
+            # return year, year,logic_string
 
 def _contains_canadian_format(val):
     val=val.replace(' ','')
@@ -419,7 +478,7 @@ def _contains_date_with_words_and_hyp(val):
 
 
 def is_bc(date_string):
-    return re.search('^-|BC|B\.C\.|BCE|MILLION|M\.', date_string)
+    return re.search('^-|BC|B\.C\.|BCE|MILLION|M\.|B\.C\.E\.', date_string)
 
 def is_reverse_chronology(date_string):
     return re.search('BP|YEARS AGO', date_string)
@@ -436,36 +495,84 @@ def calculate_year_multiplier(date_string):
 
 def is_range(date_string):
     # print re.search('.+-.+|;|\sAND\s|\sTO\s', date_string).group()
-    return re.search('.+-.+|;|\sAND\s|\sTO\s', date_string)
+    test1=re.search('.+-.+|;|\sAND\s|\sTO\s', date_string)
+    test2=len(re.findall(r'\b\d+TH\b|\b\d+ST\b|\b\d+ND\b|\b\d+RD\b',date_string))
+    if bool(test1) or test2>=2:
+        return True
+    else:
+        return False
     
-def parse_ranges(date_string):
-    """Split date ranges based on: (-,;,and,to)"""
-    # print date_string
-    # start, end = re.split('-|;|\sAND\s|\sTO\s', date_string)
-    terms = re.split('-|;|\sAND\s|\sTO\s|,', date_string)
-    terms=[re.sub(r'\D+','',x) for x in terms]
-    start=terms[0]
-    end=terms[-1]
-    if start=='':
-        end='-'+end
-        start=end
-    if int(start)>int(end):
-        end=start[:-len(end)]+end
+def parse_ranges(date_string,era=''):
+    if re.search('^\d+-\d+\(\D+\d+\)$',date_string):
+        dates=[]
+        outside_brack=date_string.split('(')
+        start=outside_brack[0].split('-')[0]
+        end=outside_brack[0].split('-')[1]
+        if int(start)>int(end):
+            end=start[:-len(end)]+end
+        dates.append(int(start))
+        dates.append(int(end))
+        dates.append(int(re.search('\d+',outside_brack[-1]).group()))
+        return min(dates), max(dates),'Numeric year range detected in '+date_string
 
-    return int(start), int(end),'Numeric year range detected in '+date_string
+
+    elif re.search(r'\d+[A-Z]{2}\s+\d+[A-Z]{2}\s+\D+',date_string):
+        return simple_epoch_conversion(date_string.replace(' ','CENTURY'),era)
+
+
+
+
+    else:
+        """Split date ranges based on: (-,;,and,to)"""
+        # print date_string
+        # start, end = re.split('-|;|\sAND\s|\sTO\s', date_string)
+        start_end_dates=re.split('-|;|\sAND\s|\sTO\s', date_string)
+        # start=re.sub(r'\D+','',start)
+        # end=re.sub(r'\D+','',end)
+        start=start_end_dates[0]
+        end=start_end_dates[-1]
+        if start=='':
+            end='-'+end
+            start=end
+        if int(start)>int(end):
+            end=start[:-len(end)]+end
+
+        return int(start), int(end),'Numeric year range detected in '+date_string
+
+
+def simple_epoch_conversion(capitalized_string,era):
+    numeric_term=re.findall(r'\d+',capitalized_string)
+    eds=[]
+    lds=[]
+    for ts in numeric_term:
+        if era=='AD':
+            ed=(int(ts)-1)*100
+            ld=ed+99
+            eds.append(ed)
+            lds.append(ld)
+
+        else:
+            ed=(int(ts))*100*-1
+            ld=ed+99
+            eds.append(ed)
+            lds.append(ld)
+    return min(eds),max(lds)
 
 def crosses_bc_ad_boundary(date_string):
     if is_bc(date_string):
-        if re.search(r'AD|A\.D\.', date_string) is not None:
+        if re.search(r'AD|A\.D\.|[^B]CE|[^\.]C\.E\.', date_string) is not None:
             return True
     return False
 
 def _is_month_day_year_format(date_string):
         try:
             parser.parse(date_string)
-            return True
+            formats=bool(re.search(r'\d+-\d+-\d+|\d+/\d+/\d+|\d+\.\d+\.\d+|.+,.+',date_string))
+            return formats
         except:
             return False
+
+
     # return re.search('\d{1,2}/\d{1,2}/\d{2,4}', date_string)
 
 
@@ -626,8 +733,8 @@ def out_of_the_box_cases(date_string):
 #     ]
 
 
-def start_date_parse(date_string):
-    result=parse_date(date_string)
+def start_date_parse(date_string,era=''):
+    result=parse_date(date_string,era)
     return str(result)
 
 
