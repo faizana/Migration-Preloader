@@ -369,7 +369,7 @@ def special_word_factors(words,capitalized_string):
         elif re.search('2ND HALF|SECOND HALF',capitalized_string):
             ed_factor=0.50
             ld_factor=0.99
-        elif re.search('LATTER HALF',capitalized_string):
+        elif re.search('LATTER HALF|LATER HALF',capitalized_string):
             ed_factor=0.50
             ld_factor=0.99
     return ed_factor,ld_factor
