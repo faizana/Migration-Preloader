@@ -19,6 +19,7 @@ from pyramid.response import Response
 from pyramid.view import view_config
 from pyramid.response import FileResponse
 
+from preloader_api import country_parse,class_parse,date_parse
 
 htmlparsetool=HTMLParser.HTMLParser()
 active_keys=[]
@@ -164,6 +165,21 @@ def download_csv(request):
         )
         response.headers['Content-Disposition'] = ("attachment; filename="+os.path.basename(path))
         return response
+
+@view_config(route_name='parse_term', renderer='json')
+def parse_term(request):
+        term=request.matchdict['terms']
+        category=request.matchdict['category']
+        resp={}
+        if category=='country':
+            resp=country_parse(term)
+        elif category=='classification':
+            resp=class_parse(term)
+        elif category=='date':
+            resp=date_parse(term)
+
+
+        return Response(simplejson.dumps(resp))
 
 def get_total_rows(csv_file):
         rows=''
@@ -660,12 +676,14 @@ def main():
     config.add_route('get_mapping_status', '/get_mapping_status/{csv_ref}')
     config.add_route('download_report', '/download_report/{csv_ref}')
     config.add_route('download_csv', '/download_csv/{csv_ref}')
+    config.add_route('parse_term', '/parse_term/{terms}/{category}')
     config.add_view(get_artstor_country_list, route_name='artstor_country_list')
     config.add_view(get_artstor_class_list, route_name='artstor_class_list')
     config.add_view(upload_csv, route_name='upload_csv')
     config.add_view(get_mapping_status, route_name='get_mapping_status')
     config.add_view(download_report, route_name='download_report')
     config.add_view(download_csv, route_name='download_csv')
+    config.add_view(parse_term, route_name='parse_term')
     app = config.make_wsgi_app()
     return app
 
