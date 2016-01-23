@@ -542,18 +542,27 @@ def parse_ranges(date_string,era=''):
 
 def simple_epoch_conversion(capitalized_string,era):
     numeric_term=re.findall(r'\d+',capitalized_string)
+    millenium=bool(re.search(r'MILLENNIUM',capitalized_string))
     eds=[]
     lds=[]
     for ts in numeric_term:
         if era=='AD':
-            ed=(int(ts)-1)*100
-            ld=ed+99
+            if not millenium:
+                ed=(int(ts)-1)*100
+                ld=ed+99
+            else:
+                ed=(int(ts)-1)*1000
+                ld=ed+999
             eds.append(ed)
             lds.append(ld)
 
         else:
-            ed=(int(ts))*100*-1
-            ld=ed+99
+            if not millenium:
+                ed=(int(ts))*100*-1
+                ld=ed+99
+            else:
+                ed=(int(ts))*1000*-1
+                ld=ed+999
             eds.append(ed)
             lds.append(ld)
     return min(eds),max(lds)
